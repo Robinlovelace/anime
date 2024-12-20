@@ -158,14 +158,13 @@ impl Anime {
                         };
                         // add 1 for R indexing
                         // ensures that no duplicates are inserted. Creates a new empty vector is needed
-                        let entry = matches.entry(i as i32).or_default();
-                        let j_plus_one = j as i32;
+                        let entry = matches.entry(j as i32).or_default();
 
-                        if let Some(tuple) = entry.iter_mut().find(|x| x.index == j_plus_one) {
+                        if let Some(tuple) = entry.iter_mut().find(|x| x.index == i as i32) {
                             tuple.shared_len += shared_len;
                         } else {
                             entry.extend(std::iter::once(MatchCandidate {
-                                index: j_plus_one,
+                                index: i as i32,
                                 shared_len,
                             }));
                         }
