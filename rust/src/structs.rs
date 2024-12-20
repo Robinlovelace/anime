@@ -3,13 +3,11 @@ use geo::{Line, Point};
 use rstar::RTreeObject;
 use rstar::AABB;
 
-/// Coordinate Reference System Type
-///
-/// Currently unused
-pub enum CrsType {
-    Projected,
-    Geographic,
-}
+// Currently unused
+// enum CrsType {
+//     Projected,
+//     Geographic,
+// }
 
 /// Represents a component `Line` of a target `LineString`
 ///
