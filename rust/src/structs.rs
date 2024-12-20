@@ -3,14 +3,16 @@ use geo::{Line, Point};
 use rstar::RTreeObject;
 use rstar::AABB;
 
-
+/// Coordinate Reference System Type
+///
+/// Currently unused
 pub enum CrsType {
     Projected,
     Geographic,
 }
 
-/// Custom struct to be used to insert into RTree
-/// Represents a component `Line` of a target `LineString`.
+/// Represents a component `Line` of a target `LineString`
+///
 /// The tuple stores the `Line` struct and the distance buffer to be used.
 /// It's [rstar::Envelope] method grows the [rstar::AABB] in x and y directions
 /// by the distance.
@@ -27,29 +29,22 @@ impl TarLine {
         AABB::from_corners(ll, ur)
     }
 
-    /// Using geographic coordinate systems should be avoided with this algorithm.
-    /// Measuring distance in geographic space between two lines finds the minimum
-    /// distance between vertices whereas the euclidean distance between two lines
-    /// considers all possible distances.
-    /// Geographic distance may create false negatives.
-    pub fn dist_by_crs(&self, other: &Line, crs: &CrsType) -> f64 {
-        match crs {
-            CrsType::Projected => self.0.euclidean_distance(other),
-            CrsType::Geographic => {
-                let x = self.0;
-                x.start_point().haversine_distance(&other.start_point())
-                    .min(
-                        x.start_point().haversine_distance(&other.end_point())
-                    )
-                    .min(
-                        x.end_point().haversine_distance(&other.start_point())
-                    )
-                    .min(
-                        x.end_point().haversine_distance(&other.end_point())
-                    )
-            },
-
-        }
+    /// Calculate distance between a target and source line string
+    // Using geographic coordinate systems should be avoided with this algorithm.
+    // Measuring distance in geographic space between two lines finds the minimum
+    // distance between vertices whereas the euclidean distance between two lines
+    // considers all possible distances.
+    // Geographic distance may create false negatives.
+    pub fn distance(&self, other: &Line) -> f64 {
+        self.0.euclidean_distance(other)
+        // CrsType::Geographic => {
+        //     let x = self.0;
+        //     x.start_point()
+        //         .haversine_distance(&other.start_point())
+        //         .min(x.start_point().haversine_distance(&other.end_point()))
+        //         .min(x.end_point().haversine_distance(&other.start_point()))
+        //         .min(x.end_point().haversine_distance(&other.end_point()))
+        // }
     }
 }
 
