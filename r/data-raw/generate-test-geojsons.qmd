@@ -1,0 +1,186 @@
+---
+format: gfm
+cache: true
+---
+
+
+
+```{r}
+library(dplyr)
+library(sf)
+```
+
+## Simple examples
+
+With negative slope in y:
+
+```{r}
+y_downslope_1 = as.matrix(
+  tibble::tribble(
+    ~x, ~y,
+    0, 3,
+    1, 0,
+    )
+) |>
+  sf::st_linestring()
+y_downslope_2 = as.matrix(
+  tibble::tribble(
+    ~x, ~y,
+    1, 0,
+    3, 0,
+    )
+) |>
+  sf::st_linestring()
+# With slight downslope:
+y_downslope_3 = as.matrix(
+  tibble::tribble(
+    ~x, ~y,
+    3, 0,
+    5, -1,
+    )
+) |>
+  sf::st_linestring()
+y_negative = sf::st_as_sf(
+  data.frame(value = 1:3),
+  geometry = sf::st_sfc(list(y_downslope_1, y_downslope_2, y_downslope_3))
+)
+```
+
+```{r}
+#| label: y_negative
+y_negative |>
+  plot(lwd = 5)
+
+```
+
+```{r}
+x_negative_1 = as.matrix(
+  tibble::tribble(
+    ~x, ~y,
+    .5, 3,
+    1, 1,
+    )
+) |>
+  sf::st_linestring()
+x_negative_2 = as.matrix(
+  tibble::tribble(
+    ~x, ~y,
+    2, 0.5,
+    3, 0.5,
+    4, 0
+    )
+) |>
+  sf::st_linestring()
+x_negative_3 = as.matrix(
+  tibble::tribble(
+    ~x, ~y,
+    4, -.2,
+    5, -.8,
+    )
+) |>
+  sf::st_linestring()
+x_negative = sf::st_as_sf(
+  data.frame(id = 1:3),
+  geometry = sf::st_sfc(list(x_negative_1, x_negative_2, x_negative_3))
+)
+plot(x_negative$geometry, lwd = 5)
+plot(y_negative, add = TRUE, lwd = 5)
+```
+
+```{r}
+sf::write_sf(y_negative, "geojson/y_negative.geojson", delete_dsn = TRUE)
+sf::write_sf(x_negative, "geojson/x_negative.geojson", delete_dsn = TRUE)
+```
+
+## OSM examples
+
+```{r}
+edinburgh_zones = zonebuilder::zb_zone("Edinburgh")
+edinburgh_central_3km = edinburgh_zones |>
+  filter(circle_id <= 2) |>
+  sf::st_union()
+osm_edinburgh_central = osmextract::oe_get_network("Edinburgh", boundary = edinburgh_central_3km, boundary_type = "clipsrc")
+meuse_lane = osm_edinburgh_central |>
+  filter(name == "Meuse Lane")
+meuse_lane_buffer = sf::st_buffer(meuse_lane, 100)
+osm_edinburgh_central = osm_edinburgh_central |>
+  sf::st_intersection(meuse_lane_buffer)
+osm_edinburgh_central |>
+  select(highway) |>
+  plot()
+```
+
+```{r}
+princes_street_central = osm_edinburgh_central |>
+  mutate(n = 1:n()) |>
+  filter(name == "Princes Street")
+princes_street_central |>
+  select(highway) |>
+  plot()
+# Check each link:
+princes_street_central |>
+  select(n) |>
+  plot(lwd = 5)
+```
+
+```{r}
+princes_street_minimal = princes_street_central |>
+  slice(1:4)
+princes_street_minimal = princes_street_minimal |>
+  mutate(value = 1:n()) |>
+  select(value, name, osm_id)
+princes_street_minimal |>
+  select(value) |>
+  plot(lwd = 5)
+```
+
+
+```{r}
+#| eval: false
+m = mapview::mapview(princes_street_minimal)
+princes_street_minimal_x = mapedit::editMap(m)
+names(princes_street_minimal_x)
+princes_street_minimal_x_1 = princes_street_minimal_x$drawn
+princes_street_minimal_x_1 = princes_street_minimal_x_1 |>
+  transmute(id = 1:n())
+```
+
+```{r}
+#| echo: false
+#| eval: false
+princes_street_minimal_x_1_points = sf::st_cast(princes_street_minimal_x_1, "POINT")
+princes_street_minimal_x_1_point_buffers = sf::st_buffer(princes_street_minimal_x_1_points, 5) |>
+  sf::st_union()
+plot(princes_street_minimal_x_1_point_buffers)
+plot(princes_street_minimal_x_1, add = TRUE)
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+#| eval: false
+bind_rows(
+  princes_street_minimal |>
+    transmute(value = as.character(value)),
+  princes_street_minimal_x_1 |>
+    transmute(value = "x")
+) |>
+  plot(lwd = 5)
+```
+
+```{r}
+#| eval: false
+dir.create("geojson")
+sf::write_sf(princes_street_minimal, "geojson/princes_street_minimal.geojson", delete_dsn = TRUE)
+sf::write_sf(princes_street_minimal_x_1, "geojson/princes_street_minimal_x_1.geojson", delete_dsn = TRUE)
+```
+
+```{r}
+```

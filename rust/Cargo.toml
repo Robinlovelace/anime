@@ -1,0 +1,19 @@
+[package]
+description = "Approximate Network Matching, Integration, and Enrichment"
+version = "0.1.0"
+name = "anime"
+license = "MIT OR Apache-2.0"
+authors = ["Josiah Parry <josiah.parry@gmail.com>"]
+keywords = ["spatial", "geospatial", "network", "transit", "gis"]
+categories = ["science", "science::geo", "algorithms"]
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib", "lib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+geo = "0.27.0"
+geo-types = { version = "0.7.12", features = ["use-rstar_0_11"] }
+rstar = "0.11.0"
