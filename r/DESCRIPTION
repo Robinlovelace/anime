@@ -1,10 +1,10 @@
 Package: anime
-Title: What the Package Does (One Line, Title Case)
+Title: Approximate Network Integration, Matching, and Enrichment
 Version: 0.0.0.9000
 Authors@R: 
     person("Josiah", "Parry", , "josiah.parry@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-9910-865X"))
-Description: What the package does (one paragraph).
+Description: R bindings to the ANIME algorithm for approximate network matching. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Language: en
@@ -13,10 +13,8 @@ RoxygenNote: 7.3.1
 Config/rextendr/version: 0.3.1.9001
 SystemRequirements: Cargo (rustc package manager)
 Imports: 
-    arrow,
-    dplyr,
     geoarrow,
-    geos,
+    arrow,
     nanoarrow,
     rlang
 Remotes: 

@@ -11,7 +11,7 @@ rnet_aggregate(
   intensive_vars = NULL,
   categorical_vars = NULL,
   source_len = sf::st_length(source),
-  target_len = NULL
+  target_len = sf::st_length(y)
 )
 }
 \arguments{

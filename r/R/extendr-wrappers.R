@@ -10,11 +10,13 @@
 #' @useDynLib anime, .registration = TRUE
 NULL
 
-rnet_match_two_trees <- function(x, y, distance_tolerance, angle_tolerance) .Call(wrap__rnet_match_two_trees, x, y, distance_tolerance, angle_tolerance)
+init_anime <- function(source, target, distance_tolerance, angle_tolerance) .Call(wrap__init_anime, source, target, distance_tolerance, angle_tolerance)
 
-init_anime <- function(x, y, distance_tolerance, angle_tolerance) .Call(wrap__init_anime, x, y, distance_tolerance, angle_tolerance)
+interpolate_extensive_ <- function(source_var, anime) .Call(wrap__interpolate_extensive_, source_var, anime)
 
-interpolate_extensive <- function(var, anime) .Call(wrap__interpolate_extensive, var, anime)
+interpolate_intensive_ <- function(source_var, anime) .Call(wrap__interpolate_intensive_, source_var, anime)
+
+get_matches_ <- function(anime) .Call(wrap__get_matches_, anime)
 
 
 # nolint end
