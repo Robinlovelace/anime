@@ -18,5 +18,7 @@ interpolate_intensive_ <- function(source_var, anime) .Call(wrap__interpolate_in
 
 get_matches_ <- function(anime) .Call(wrap__get_matches_, anime)
 
+anime_print_helper <- function(x) .Call(wrap__anime_print_helper, x)
+
 
 # nolint end

@@ -86,26 +86,44 @@ fn init_anime(
 
     anime.find_matches().unwrap();
 
-    ExternalPtr::new(anime)
+    let mut ptr = ExternalPtr::new(anime);
+    ptr.set_class(["anime"]).unwrap();
+    ptr
 }
 
+
+#[extendr]
+fn anime_print_helper(x: ExternalPtr<Anime>) -> List {
+    list!(
+        source_fts = x.source_lens.len(),
+        target_fts = x.target_lens.len(),
+        angle_tolerance = x.angle_tolerance,
+        distance_tolerance = x.distance_tolerance
+    )
+}
 #[extendr]
 fn interpolate_extensive_(source_var: &[f64], anime: ExternalPtr<Anime>) -> Doubles {
-    let Ok(res) = anime
-        .interpolate_extensive(source_var) else {
-            throw_r_error("Failed to perform extensive interpolation")
-        };
-    Doubles::from_values(res)
+    let res = anime
+        .interpolate_extensive(source_var); 
+    match res {
+        Ok(r) => Doubles::from_values(r),
+        Err(e) => {
+            throw_r_error(format!("Failed to perform extensive interpolation: {:?}", e.to_string()))
+        }
+    }
 }
 
 
 #[extendr]
-fn interpolate_intensive_(source_var: &[f64], anime: ExternalPtr<Anime>) -> Doubles{
-    let Ok(res) = anime
-    .interpolate_intensive(source_var) else {
-        throw_r_error("Failed to perform intensive interpolation")
-    };
-    Doubles::from_values(res)
+fn interpolate_intensive_(source_var: &[f64], anime: ExternalPtr<Anime>) -> Doubles {
+    let res = anime
+        .interpolate_intensive(source_var); 
+    match res {
+        Ok(r) => Doubles::from_values(r),
+        Err(e) => {
+            throw_r_error(format!("Failed to perform extensive interpolation: {:?}", e.to_string()))
+        }
+    }
 }
 
 #[derive(IntoDataFrameRow)]
@@ -140,4 +158,5 @@ extendr_module! {
     fn interpolate_extensive_;
     fn interpolate_intensive_;
     fn get_matches_;
+    fn anime_print_helper;
 }

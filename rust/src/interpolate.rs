@@ -83,7 +83,7 @@ impl Anime {
     /// the length of the target.
     pub fn interpolate_intensive(&self, source_var: &[f64]) -> Result<Vec<f64>, AnimeError> {
         let nv = source_var.len();
-        let n_tar = self.target_lens.len(); // Assuming target_lens represent target lengths.
+        let n_tar = self.source_lens.len(); // Assuming target_lens represent target lengths.
 
         if nv != n_tar {
             return Err(AnimeError::IncorrectLength);

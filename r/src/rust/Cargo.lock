@@ -48,7 +48,7 @@ dependencies = [
 
 [[package]]
 name = "anime"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "geo 0.27.0",
  "geo-types",
