@@ -49,6 +49,8 @@ dependencies = [
 [[package]]
 name = "anime"
 version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8435d82d6c0ce292ef8419aa0d6b1671ce7b522e78e8080fbe45a5d9c8322d40"
 dependencies = [
  "geo 0.27.0",
  "geo-types",
@@ -503,7 +505,7 @@ checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 [[package]]
 name = "extendr-api"
 version = "0.7.1"
-source = "git+https://github.com/extendr/extendr#2c2749f5e9d13d5628399c8779c47d420246a4a1"
+source = "git+https://github.com/extendr/extendr?rev=2c2749f5e9d13d5628399c8779c47d420246a4a1#2c2749f5e9d13d5628399c8779c47d420246a4a1"
 dependencies = [
  "extendr-macros",
  "libR-sys",
@@ -514,7 +516,7 @@ dependencies = [
 [[package]]
 name = "extendr-macros"
 version = "0.7.1"
-source = "git+https://github.com/extendr/extendr#2c2749f5e9d13d5628399c8779c47d420246a4a1"
+source = "git+https://github.com/extendr/extendr?rev=2c2749f5e9d13d5628399c8779c47d420246a4a1#2c2749f5e9d13d5628399c8779c47d420246a4a1"
 dependencies = [
  "proc-macro2",
  "quote",

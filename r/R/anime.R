@@ -36,8 +36,8 @@ anime <- function(source, target, distance_tolerance = 10, angle_tolerance = 5) 
     rlang::abort("`distance_tolerance` must be a scalar numeric")
   }
 
-  x <- validate_lines(source)
-  y <- validate_lines(target)
+  source <- validate_lines(source)
+  target <- validate_lines(target)
 
   init_anime(source, target, distance_tolerance, angle_tolerance)
 }
