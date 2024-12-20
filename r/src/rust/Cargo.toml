@@ -1,17 +1,21 @@
 [package]
-name = 'rnetmatch_r'
+name = 'anime_r'
 publish = false
 version = '0.1.0'
 edition = '2021'
 
 [lib]
 crate-type = [ 'staticlib' ]
-name = 'rnetmatch_r'
+name = 'anime'
 
 [dependencies]
-arrow = "50.0.0"
-arrow_extendr = "50.0.0"
+arrow = "52.0.0"
+arrow_extendr = "52.0.0"
 extendr-api = '*'
-geoarrow = "0.1.0"
+geoarrow = "0.3.0"
 itertools = "0.12.0"
-rnetmatch = { path = "../../../rust" }
+anime = { path = "../../../rust" }
+
+
+[patch.crates-io]
+extendr-api = {git = "https://github.com/extendr/extendr"}

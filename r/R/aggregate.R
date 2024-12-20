@@ -104,8 +104,16 @@ rnet_aggregate <- function(
   # source_len cannot be missing when extensive_vars is not null
 
   # create column names with suffixes to be used
-  ext_nms <- paste0(extensive_vars, "_ext")
-  int_nms <- paste0(intensive_vars, "_int")
+  ext_nms <- if (is.null(extensive_vars)) {
+    NULL 
+  } else {
+    paste0(extensive_vars, "_ext")
+  }
+  int_nms <- if (is.null(intensive_vars)) {
+    NULL
+  } else {
+    paste0(intensive_vars, "_int")
+  }
 
   # fetch neighbor index
   j <- matches$j

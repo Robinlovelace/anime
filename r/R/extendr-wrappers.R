@@ -4,20 +4,17 @@
 
 #
 # This file was created with the following call:
-#   .Call("wrap__make_rnetmatch_wrappers", use_symbols = TRUE, package_name = "rnetmatch")
+#   .Call("wrap__make_anime_wrappers", use_symbols = TRUE, package_name = "anime")
 
-#' @docType package
 #' @usage NULL
-#' @useDynLib rnetmatch, .registration = TRUE
+#' @useDynLib anime, .registration = TRUE
 NULL
 
-rnet_match_one_tree <- function(x, y, distance_tolerance, angle_tolerance, is_projected) .Call(wrap__rnet_match_one_tree, x, y, distance_tolerance, angle_tolerance, is_projected)
+rnet_match_two_trees <- function(x, y, distance_tolerance, angle_tolerance) .Call(wrap__rnet_match_two_trees, x, y, distance_tolerance, angle_tolerance)
 
-rnet_match_two_trees <- function(x, y, distance_tolerance, angle_tolerance, is_projected) .Call(wrap__rnet_match_two_trees, x, y, distance_tolerance, angle_tolerance, is_projected)
+init_anime <- function(x, y, distance_tolerance, angle_tolerance) .Call(wrap__init_anime, x, y, distance_tolerance, angle_tolerance)
 
-rnet_match_two_trees_hashmap <- function(x, y, distance_tolerance, angle_tolerance, is_projected) .Call(wrap__rnet_match_two_trees_hashmap, x, y, distance_tolerance, angle_tolerance, is_projected)
-
-rnet_match_vec <- function(x, y, distance_tolerance, angle_tolerance, is_projected) .Call(wrap__rnet_match_vec, x, y, distance_tolerance, angle_tolerance, is_projected)
+interpolate_extensive <- function(var, anime) .Call(wrap__interpolate_extensive, var, anime)
 
 
 # nolint end

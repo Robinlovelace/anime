@@ -1,12 +1,32 @@
+pub mod interpolate;
 mod overlap;
 pub mod structs;
+
 use crate::{
     overlap::*, overlap_range, solve_no_x_overlap, solve_no_y_overlap, structs::*, x_range,
     y_range, TarLine,
 };
 use geo::{BoundingRect, EuclideanDistance, EuclideanLength};
 use rstar::primitives::{CachedEnvelope, GeomWithData};
-use std::{cell::OnceCell, collections::BTreeMap};
+use std::{cell::OnceCell, collections::BTreeMap, error::Error, fmt::Display};
+
+/// Anime Error Type
+#[derive(Debug, Clone, Copy)]
+pub enum AnimeError {
+    IncorrectLength,
+    MatchesNotFound,
+}
+
+impl Display for AnimeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AnimeError::IncorrectLength => write!(f, "Variable to interpolate must have the same number of observations as the `target` lines"),
+            AnimeError::MatchesNotFound => write!(f, "`matches` needs to be instantiated with `self.find_matches()`"),
+        }
+    }
+}
+
+impl Error for AnimeError {}
 
 /// R* Tree for source geometries
 pub type SourceTree = rstar::RTree<GeomWithData<CachedEnvelope<geo_types::Line>, (usize, f64)>>;
@@ -14,7 +34,20 @@ pub type SourceTree = rstar::RTree<GeomWithData<CachedEnvelope<geo_types::Line>,
 /// R* Tree for target geometries
 pub type TargetTree = rstar::RTree<GeomWithData<CachedEnvelope<TarLine>, (usize, f64)>>;
 
-pub type MatchesMap = BTreeMap<i32, Vec<(i32, f64)>>;
+/// Represents a partial source <-> target match
+#[derive(Debug, Clone)]
+pub struct MatchCandidate {
+    /// The index of the target geometry as an i32
+    pub index: i32,
+    /// The amount of shared length between two geometries
+    pub shared_len: f64,
+}
+
+/// Stores match length
+///
+/// The BTreeMap key is the index of the source geometry
+/// whereas the entry contains
+pub type MatchesMap = BTreeMap<i32, Vec<MatchCandidate>>;
 
 /// Approximate Network Matching, Integration, and Enrichment
 ///
@@ -28,6 +61,7 @@ pub type MatchesMap = BTreeMap<i32, Vec<(i32, f64)>>;
 ///
 /// The lengths, represented as `Vec<f64>` are required for the
 /// integration of attributes.
+#[derive(Clone, Debug)]
 pub struct Anime {
     pub distance_tolerance: f64,
     pub angle_tolerance: f64,
@@ -65,8 +99,11 @@ impl Anime {
         }
     }
 
+    /// Find candidate matches between source and target
+    ///
+    /// The matches can only be found once for each source and target pair.
     pub fn find_matches(&mut self) -> Result<&mut Anime, MatchesMap> {
-        let mut matches: BTreeMap<i32, Vec<(i32, f64)>> = BTreeMap::new();
+        let mut matches: MatchesMap = BTreeMap::new();
         let candidates = self
             .source_tree
             .intersection_candidates_with_other_tree(&self.target_tree);
@@ -121,13 +158,16 @@ impl Anime {
                         };
                         // add 1 for R indexing
                         // ensures that no duplicates are inserted. Creates a new empty vector is needed
-                        let entry = matches.entry((i + 1) as i32).or_default();
-                        let j_plus_one = (j + 1) as i32;
+                        let entry = matches.entry(i as i32).or_default();
+                        let j_plus_one = j as i32;
 
-                        if let Some(tuple) = entry.iter_mut().find(|(x, _)| *x == j_plus_one) {
-                            tuple.1 += shared_len;
+                        if let Some(tuple) = entry.iter_mut().find(|x| x.index == j_plus_one) {
+                            tuple.shared_len += shared_len;
                         } else {
-                            entry.extend(std::iter::once((j_plus_one, shared_len)));
+                            entry.extend(std::iter::once(MatchCandidate {
+                                index: j_plus_one,
+                                shared_len,
+                            }));
                         }
                     }
                 }

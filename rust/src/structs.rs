@@ -14,6 +14,7 @@ use rstar::AABB;
 /// The tuple stores the `Line` struct and the distance buffer to be used.
 /// It's [rstar::Envelope] method grows the [rstar::AABB] in x and y directions
 /// by the distance.
+#[derive(Debug, Clone)]
 pub struct TarLine(pub Line<f64>, pub f64);
 impl TarLine {
     /// Create an AABB from the contained `Line`
