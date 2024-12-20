@@ -1,8 +1,8 @@
-## Approximate Network Matching
+## Approximate Network Matching, Integration, and Enrichment
 
-The algorithm works like this: 
+The algorithm works like this:
 
-Let `A` and `B` be two vectors of `LineSring`, `Vec<LineString>`. 
+Let `A` and `B` be two vectors of `LineSring`, `Vec<LineString>`.
 Let `i` refer to the index position of a `LineString` in `A` and let `j` refer to the index position of `B`.
 For each `LineString` in `A` or `B`, let the index of the component line be `k` where `Aik` is a `Line`.
 
@@ -24,8 +24,8 @@ for j in B:
     calculate the slope of Bjk
     expand the AABB of Bjk in the x and y direction by DT
     insert Bjk with a tuple of (j, slope_Bjk)
-```    
-    
+```
+
 
 - Locate intersection candidates between A and B
 - for each candidate pair, extract the slopes of Aik and Bjk
@@ -36,12 +36,12 @@ for j in B:
 - let `d` be the distance between lines `Aik` and `Bjk`
 - if the distance between `Aik` and `Bjk` is less than `DT`, continue
 - if the angle of `Ai` is less than or equal to 45
-  - calculate the overlap in the x dimension between `Aik` and `Bjk` 
+  - calculate the overlap in the x dimension between `Aik` and `Bjk`
   - if there is overlap in the x-dimension
     - solve for y in the line defined by `Aik` based on `xmin` and `xmax`
     - calculate the length of the line segment defined by `(xmin, y1)` and `(xmax, y2)`
     - insert `i` into the BTreeMap if it does not exist
-      - append (`j`, `d`) to the value vector if `j` does not exist 
+      - append (`j`, `d`) to the value vector if `j` does not exist
       - if `j` is in the value vector, add `d` to the f64 value
 - else if the angle of `Ai` is greater than 45 degrees
   - calculate the overlap in the y dimension between `Aik` and `Bjk`
@@ -49,11 +49,5 @@ for j in B:
     - solve for x in the line defined by `Aik` based on `ymin` and `ymax`
     - calculate the length of the line segment defined by `(x1, ymin)` and `(x2, ymax)`
     - insert `i` into the BTreeMap if it does not exist
-      - append (`j`, `d`) to the value vector if `j` does not exist 
+      - append (`j`, `d`) to the value vector if `j` does not exist
       - if `j` is in the value vector, add `d` to the f64 value
-
-
-
-
-
-
