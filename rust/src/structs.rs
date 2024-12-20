@@ -1,4 +1,4 @@
-use geo::{BoundingRect, EuclideanDistance, HaversineDistance};
+use geo::{BoundingRect, EuclideanDistance};
 use geo::{Line, Point};
 use rstar::RTreeObject;
 use rstar::AABB;

@@ -14,6 +14,8 @@ pub type SourceTree = rstar::RTree<GeomWithData<CachedEnvelope<geo_types::Line>,
 /// R* Tree for target geometries
 pub type TargetTree = rstar::RTree<GeomWithData<CachedEnvelope<TarLine>, (usize, f64)>>;
 
+pub type MatchesMap = BTreeMap<i32, Vec<(i32, f64)>>;
+
 /// Approximate Network Matching, Integration, and Enrichment
 ///
 /// This struct contains all of the information needed to perform
@@ -33,7 +35,7 @@ pub struct Anime {
     pub source_lens: Vec<f64>,
     pub target_tree: TargetTree,
     pub target_lens: Vec<f64>,
-    pub matches: OnceCell<BTreeMap<i32, Vec<(i32, f64)>>>,
+    pub matches: OnceCell<MatchesMap>,
 }
 
 impl Anime {
@@ -63,13 +65,12 @@ impl Anime {
         }
     }
 
-    pub fn find_matches(&mut self) -> Result<&mut Anime, BTreeMap<i32, Vec<(i32, f64)>>> {
+    pub fn find_matches(&mut self) -> Result<&mut Anime, MatchesMap> {
         let mut matches: BTreeMap<i32, Vec<(i32, f64)>> = BTreeMap::new();
         let candidates = self
             .source_tree
             .intersection_candidates_with_other_tree(&self.target_tree);
 
-        let crs_type = crate::CrsType::Projected;
         candidates.for_each(|(cx, cy)| {
             let xbb = cx.geom().bounding_rect();
             let ybb = cy.geom().0.bounding_rect();
@@ -98,31 +99,29 @@ impl Anime {
                 if x_overlap.is_some() || y_overlap.is_some() {
                     // calculate the distance from the line segment
                     // if its within our threshold we include it;
-                    let d = cy.geom().distance(&cx.geom());
+                    let d = cy.geom().distance(cx.geom());
 
                     // if distance is less than or equal to tolerance, add the key
                     if d <= self.distance_tolerance {
                         let shared_len = if x_slope.atan().to_degrees() <= 45.0 {
                             if x_overlap.is_some() {
                                 let (p1, p2) =
-                                    solve_no_y_overlap(x_overlap.unwrap(), &cx.geom(), &x_slope);
+                                    solve_no_y_overlap(x_overlap.unwrap(), cx.geom(), &x_slope);
 
                                 p1.euclidean_distance(&p2)
                             } else {
                                 0.0
                             }
+                        } else if y_overlap.is_some() {
+                            let (p1, p2) =
+                                solve_no_x_overlap(y_overlap.unwrap(), cx.geom(), &x_slope);
+                            p1.euclidean_distance(&p2)
                         } else {
-                            if y_overlap.is_some() {
-                                let (p1, p2) =
-                                    solve_no_x_overlap(y_overlap.unwrap(), &cx.geom(), &x_slope);
-                                p1.euclidean_distance(&p2)
-                            } else {
-                                0.0
-                            }
+                            0.0
                         };
                         // add 1 for R indexing
                         // ensures that no duplicates are inserted. Creates a new empty vector is needed
-                        let entry = matches.entry((i + 1) as i32).or_insert_with(Vec::new);
+                        let entry = matches.entry((i + 1) as i32).or_default();
                         let j_plus_one = (j + 1) as i32;
 
                         if let Some(tuple) = entry.iter_mut().find(|(x, _)| *x == j_plus_one) {
