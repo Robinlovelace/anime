@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(rnetmatch)
+library(anime)
 
-test_check("rnetmatch")
+test_check("anime")
