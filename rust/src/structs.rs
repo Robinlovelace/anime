@@ -1,4 +1,4 @@
-use geo::{BoundingRect, EuclideanDistance};
+use geo::{BoundingRect, Distance, Euclidean};
 use geo::{Line, Point};
 use rstar::RTreeObject;
 use rstar::AABB;
@@ -35,15 +35,7 @@ impl TarLine {
     // considers all possible distances.
     // Geographic distance may create false negatives.
     pub fn distance(&self, other: &Line) -> f64 {
-        self.0.euclidean_distance(other)
-        // CrsType::Geographic => {
-        //     let x = self.0;
-        //     x.start_point()
-        //         .haversine_distance(&other.start_point())
-        //         .min(x.start_point().haversine_distance(&other.end_point()))
-        //         .min(x.end_point().haversine_distance(&other.start_point()))
-        //         .min(x.end_point().haversine_distance(&other.end_point()))
-        // }
+        Euclidean::distance(&self.0, other)
     }
 }
 

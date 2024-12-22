@@ -6,7 +6,7 @@ use crate::{
     overlap::*, overlap_range, solve_no_x_overlap, solve_no_y_overlap, structs::*, x_range,
     y_range, TarLine,
 };
-use geo::{BoundingRect, EuclideanDistance, EuclideanLength};
+use geo::{BoundingRect, Distance, Euclidean, Length};
 use rstar::primitives::{CachedEnvelope, GeomWithData};
 use std::{cell::OnceCell, collections::BTreeMap, error::Error, fmt::Display};
 
@@ -145,14 +145,14 @@ impl Anime {
                                 let (p1, p2) =
                                     solve_no_y_overlap(x_overlap.unwrap(), cx.geom(), &x_slope);
 
-                                p1.euclidean_distance(&p2)
+                                Euclidean::distance(&p1, &p2)
                             } else {
                                 0.0
                             }
                         } else if y_overlap.is_some() {
                             let (p1, p2) =
                                 solve_no_x_overlap(y_overlap.unwrap(), cx.geom(), &x_slope);
-                            p1.euclidean_distance(&p2)
+                            Euclidean::distance(&p1, &p2)
                         } else {
                             0.0
                         };
@@ -184,7 +184,7 @@ fn create_source_rtree(
     let to_insert = x
         .enumerate()
         .flat_map(|(i, xi)| {
-            let xi_len = xi.euclidean_length();
+            let xi_len = xi.length::<Euclidean>();
             source_lens.push(xi_len);
             let components = xi
                 .lines()
@@ -209,7 +209,7 @@ fn create_target_rtree(
     let to_insert = y
         .enumerate()
         .flat_map(|(i, yi)| {
-            let yi_len = yi.euclidean_length();
+            let yi_len = yi.length::<Euclidean>();
             target_lens.push(yi_len);
             let components = yi
                 .lines()
