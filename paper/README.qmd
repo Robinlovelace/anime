@@ -256,7 +256,7 @@ Candidate matches as determined by intersecting AABBs must then be further evalu
 
 ```{r}
 #| fig-cap: "Matched lines with 15° angle tolerance and 2.5 meter distance tolerance."
-mtx <- rnetmatch::rnet_match(rnet_x, rnet_y, 2.5, 15)
+mtx <- anime::rnet_match(rnet_x, rnet_y, 2.5, 15)
 
 i <- 4
 ydx <- which(mtx$i == i)
