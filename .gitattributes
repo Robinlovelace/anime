@@ -1,0 +1,6 @@
+# ingore html, css, markdown
+*.html linguist-detectable=false
+*.css linguist-detectable=false
+*.md linguist-detectable=false
+*.tex linguist-detectable=false
+*.lua linguist-detectable=false
