@@ -13,6 +13,27 @@ validate_lines <- function(x, error_call = rlang::caller_call()) {
   geoarrow::as_geoarrow_array(x)
 }
 
+# TODO: use arrow and nanoarrow imports in a proper function
+demo_use_of_arror_and_nanoarrow <- function() {
+  # This is a demo function to show how to use arrow and nanoarrow
+  # This function is not meant to be used in production code
+  # It is only meant to be used in the context of the `anime` package
+
+  # Create a simple data frame
+  df <- data.frame(
+    x = c(0, 1, 2, 3, 4),
+    y = c(0, 1, 2, 3, 4)
+  )
+
+  # Convert the data frame to an arrow table
+  arrow_table <- arrow::Table$create(df)
+
+  # Convert the arrow table to a nanoarrow table
+  nano_table <- nanoarrow::as_nanoarrow_array(df)
+
+  message("Successfully converted data frame to arrow and nanoarrow")
+}
+
 #' Match two sets of lines
 #' 
 #' @param source A geoarrow object containing the source lines
