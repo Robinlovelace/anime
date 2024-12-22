@@ -23,4 +23,3 @@ Remotes:
 Suggests: 
     arrow,
     nanoarrow
-Config/testthat/edition: 3

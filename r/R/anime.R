@@ -13,7 +13,13 @@ validate_lines <- function(x, error_call = rlang::caller_call()) {
   geoarrow::as_geoarrow_array(x)
 }
 
-
+#' Match two sets of lines
+#' 
+#' @param source A geoarrow object containing the source lines
+#' @param target A geoarrow object containing the target lines
+#' @param distance_tolerance The maximum distance between two points to be considered a match
+#' @param angle_tolerance The maximum angle between two lines to be considered a match
+#' @return A dataframe containing the matches
 #' @export
 anime <- function(source, target, distance_tolerance = 10, angle_tolerance = 5) {
   if (!rlang::is_bare_numeric(distance_tolerance, 1)) {
