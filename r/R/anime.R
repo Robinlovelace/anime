@@ -77,7 +77,9 @@ as.data.frame.anime <- function(x, ...) {
   get_matches_(x)
 }
 
-
+#' Get the matches from an `anime` object
+#' 
+#' @param x An `anime` object
 #' @export
 get_matches <- function(x) {
   if (!inherits(x, "anime")) {
@@ -91,8 +93,9 @@ get_matches <- function(x) {
   structure(res, class = c("tbl", "data.frame"))
 }
 
+#' @param x An `anime` object
 #' @export
-print.anime <- function(x, ...) {
+print.anime <- function(x) {
   .info <- anime_print_helper(x)
   to_print <- c(
     "<anime>",
@@ -110,6 +113,8 @@ print.anime <- function(x, ...) {
 
 #' Interpolate extensive variables
 #'
+#' @param x An `anime` object
+#' @param ... Variables to interpolate
 #' @export
 interpolate_extensive <- function(x, ...) {
   if (!inherits(x, "anime")) {
@@ -144,6 +149,7 @@ interpolate_extensive <- function(x, ...) {
 
 #' Interpolate extensive variables
 #'
+#' @inheritParams interpolate_extensive
 #' @export
 interpolate_intensive <- function(x, ...) {
   if (!inherits(x, "anime")) {
