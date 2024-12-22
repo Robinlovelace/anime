@@ -23,4 +23,5 @@ Imports:
 Remotes: 
     geoarrow/geoarrow-r
 Suggests: 
-Config/testthat/edition: 3
+    arrow,
+    nanoarrow
