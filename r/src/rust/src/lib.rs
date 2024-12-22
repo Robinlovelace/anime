@@ -7,8 +7,9 @@ use arrow::{
 use arrow_extendr::from::FromArrowRobj;
 use extendr_api::prelude::*;
 use geoarrow::{
-    array::LineStringArray, trait_::GeometryArrayAccessor,
-    GeometryArrayTrait,
+    array::{LineStringArray, NativeArrayDyn},
+    trait_::ArrayAccessor,
+    ArrayBase,
 };
 pub type ErrGeoArrowRobj = ArrowError;
 
@@ -38,9 +39,7 @@ pub fn new_field(robj: &Robj, name: &str) -> Result<Robj> {
         .call(pairlist!(name, robj))
 }
 
-fn read_geoarrow_r(
-    robj: Robj,
-) -> Result<std::sync::Arc<dyn GeometryArrayTrait>> {
+fn read_geoarrow_r(robj: Robj) -> Result<NativeArrayDyn> {
     // extract datatype from R object
     let narrow_data_type = infer_geoarrow_schema(&robj).unwrap();
     let arrow_dt = as_data_type(&narrow_data_type).unwrap();
@@ -53,10 +52,9 @@ fn read_geoarrow_r(
     let x = make_array(ArrayData::from_arrow_robj(&robj).unwrap());
 
     // create geoarrow array
-    let res = geoarrow::array::from_arrow_array(&x, &field).map_err(|e| e.to_string())?;
+    let res = NativeArrayDyn::from_arrow_array(&x, &field).map_err(|e| e.to_string())?;
     Ok(res)
 }
-
 
 #[extendr]
 fn init_anime(
@@ -69,12 +67,12 @@ fn init_anime(
     let target = read_geoarrow_r(target).unwrap();
     let source = source
         .as_any()
-        .downcast_ref::<LineStringArray<i32, 2>>()
+        .downcast_ref::<LineStringArray>()
         .unwrap()
         .clone();
     let target = target
         .as_any()
-        .downcast_ref::<LineStringArray<i32, 2>>()
+        .downcast_ref::<LineStringArray>()
         .unwrap()
         .clone();
     let mut anime = anime::Anime::load_geometries(
@@ -91,7 +89,6 @@ fn init_anime(
     ptr
 }
 
-
 #[extendr]
 fn anime_print_helper(x: ExternalPtr<Anime>) -> List {
     list!(
@@ -103,26 +100,25 @@ fn anime_print_helper(x: ExternalPtr<Anime>) -> List {
 }
 #[extendr]
 fn interpolate_extensive_(source_var: &[f64], anime: ExternalPtr<Anime>) -> Doubles {
-    let res = anime
-        .interpolate_extensive(source_var); 
+    let res = anime.interpolate_extensive(source_var);
     match res {
         Ok(r) => Doubles::from_values(r),
-        Err(e) => {
-            throw_r_error(format!("Failed to perform extensive interpolation: {:?}", e.to_string()))
-        }
+        Err(e) => throw_r_error(format!(
+            "Failed to perform extensive interpolation: {:?}",
+            e.to_string()
+        )),
     }
 }
 
-
 #[extendr]
 fn interpolate_intensive_(source_var: &[f64], anime: ExternalPtr<Anime>) -> Doubles {
-    let res = anime
-        .interpolate_intensive(source_var); 
+    let res = anime.interpolate_intensive(source_var);
     match res {
         Ok(r) => Doubles::from_values(r),
-        Err(e) => {
-            throw_r_error(format!("Failed to perform extensive interpolation: {:?}", e.to_string()))
-        }
+        Err(e) => throw_r_error(format!(
+            "Failed to perform extensive interpolation: {:?}",
+            e.to_string()
+        )),
     }
 }
 
@@ -130,21 +126,22 @@ fn interpolate_intensive_(source_var: &[f64], anime: ExternalPtr<Anime>) -> Doub
 struct MatchRow {
     target_id: i32,
     source_id: i32,
-    shared_len: f64
+    shared_len: f64,
 }
 
 #[extendr]
 fn get_matches_(anime: ExternalPtr<Anime>) -> Robj {
     let inner = anime.matches.get().unwrap();
-    let all_items = inner.into_iter().flat_map(|(idx, cands)| {
-        cands.into_iter().map(|ci| {
-            MatchRow {
+    let all_items = inner
+        .into_iter()
+        .flat_map(|(idx, cands)| {
+            cands.into_iter().map(|ci| MatchRow {
                 target_id: *idx,
                 source_id: ci.index,
-                shared_len: ci.shared_len   
-            }
+                shared_len: ci.shared_len,
+            })
         })
-    }).collect::<Vec<_>>();
+        .collect::<Vec<_>>();
     let df = Dataframe::try_from_values(all_items).unwrap();
     df.into()
 }
