@@ -87,7 +87,7 @@ print.anime <- function(x, ...) {
 #' Interpolate extensive variables
 #'
 #' @param x An `anime` object
-#' @param ... Variables to interpolate
+#' @param ... Variables to interpolate (must be numeric vectors)
 #' @export
 interpolate_extensive <- function(x, ...) {
   if (!inherits(x, "anime")) {
