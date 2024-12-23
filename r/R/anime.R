@@ -94,8 +94,9 @@ get_matches <- function(x) {
 }
 
 #' @param x An `anime` object
+#' @param ... Unused, for compatibility with `print()`
 #' @export
-print.anime <- function(x) {
+print.anime <- function(x, ...) {
   .info <- anime_print_helper(x)
   to_print <- c(
     "<anime>",

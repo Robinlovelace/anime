@@ -6,6 +6,11 @@
 \usage{
 interpolate_intensive(x, ...)
 }
+\arguments{
+\item{x}{An \code{anime} object}
+
+\item{...}{Variables to interpolate}
+}
 \description{
 Interpolate extensive variables
 }
