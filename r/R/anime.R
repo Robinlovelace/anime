@@ -48,9 +48,6 @@ anime <- function(source, target, distance_tolerance = 10, angle_tolerance = 5) 
   init_anime(source, target, distance_tolerance, angle_tolerance)
 }
 
-#' @param x An `anime` object
-#' @param ... Extensive variables to interpolate
-#' @return A dataframe containing the matches
 #' @export
 as.data.frame.anime <- function(x, ...) {
   get_matches_(x)
