@@ -93,8 +93,6 @@ get_matches <- function(x) {
   structure(res, class = c("tbl", "data.frame"))
 }
 
-#' @param x An `anime` object
-#' @param ... Unused, for compatibility with `print()`
 #' @export
 print.anime <- function(x, ...) {
   .info <- anime_print_helper(x)
