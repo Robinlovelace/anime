@@ -7,3 +7,4 @@
 ^src/Makevars\.win$
 ^data-raw$
 ^dev$
+^\.github$
