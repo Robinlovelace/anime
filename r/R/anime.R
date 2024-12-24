@@ -13,7 +13,13 @@ validate_lines <- function(x, error_call = rlang::caller_call()) {
   geoarrow::as_geoarrow_array(x)
 }
 
-
+#' Match two sets of lines
+#' 
+#' @param source a linestring geometry. Must be handleable by `wk`.
+#' @param target a linestring geometry. Must be handleable by `wk`.
+#' @param distance_tolerance the maximum distance between two linestrings to be considered a match.
+#' @param angle_tolerance the maximum angle difference between two lines to be considered a match.
+#' @return an object of class `anime`
 #' @export
 anime <- function(source, target, distance_tolerance = 10, angle_tolerance = 5) {
   if (!rlang::is_bare_numeric(distance_tolerance, 1)) {
@@ -42,13 +48,14 @@ anime <- function(source, target, distance_tolerance = 10, angle_tolerance = 5) 
   init_anime(source, target, distance_tolerance, angle_tolerance)
 }
 
-
 #' @export
 as.data.frame.anime <- function(x, ...) {
   get_matches_(x)
 }
 
-
+#' Get the matches from an `anime` object
+#' 
+#' @param x An `anime` object
 #' @export
 get_matches <- function(x) {
   if (!inherits(x, "anime")) {
@@ -77,10 +84,12 @@ print.anime <- function(x, ...) {
   invisible(to_print)
 }
 
-
-
 #' Interpolate extensive variables
 #'
+#' Interpolate values from the source geometry to the target geometry. Intensive properties are values which are independent of the geometry's size . These are values such as a density or temperature.
+#'
+#' @param x an `anime` object.
+#' @param ... variables to interpolate (must be numeric vectors).
 #' @export
 interpolate_extensive <- function(x, ...) {
   if (!inherits(x, "anime")) {
@@ -114,7 +123,8 @@ interpolate_extensive <- function(x, ...) {
 
 
 #' Interpolate extensive variables
-#'
+#' Interpolate values from the source geometry to the target geometry. Extensive properties are values which are dependent upon the geometry's size. Extensive properties would be a population or length. 
+#' @inheritParams interpolate_extensive
 #' @export
 interpolate_intensive <- function(x, ...) {
   if (!inherits(x, "anime")) {
