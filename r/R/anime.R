@@ -15,11 +15,11 @@ validate_lines <- function(x, error_call = rlang::caller_call()) {
 
 #' Match two sets of lines
 #' 
-#' @param source A geoarrow object containing the source lines
-#' @param target A geoarrow object containing the target lines
-#' @param distance_tolerance The maximum distance between two points to be considered a match
-#' @param angle_tolerance The maximum angle between two lines to be considered a match
-#' @return A dataframe containing the matches
+#' @param source a linestring geometry. Must be handleable by `wk`.
+#' @param target a linestring geometry. Must be handleable by `wk`.
+#' @param distance_tolerance the maximum distance between two linestrings to be considered a match.
+#' @param angle_tolerance the maximum angle difference between two lines to be considered a match.
+#' @return an object of class `anime`
 #' @export
 anime <- function(source, target, distance_tolerance = 10, angle_tolerance = 5) {
   if (!rlang::is_bare_numeric(distance_tolerance, 1)) {
