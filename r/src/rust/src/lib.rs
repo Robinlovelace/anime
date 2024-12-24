@@ -127,6 +127,8 @@ struct MatchRow {
     target_id: i32,
     source_id: i32,
     shared_len: f64,
+    source_weighted: f64,
+    target_weighted: f64,
 }
 
 #[extendr]
@@ -135,10 +137,19 @@ fn get_matches_(anime: ExternalPtr<Anime>) -> Robj {
     let all_items = inner
         .into_iter()
         .flat_map(|(idx, cands)| {
-            cands.into_iter().map(|ci| MatchRow {
-                target_id: *idx,
-                source_id: ci.index,
-                shared_len: ci.shared_len,
+            let source_lens = &anime.source_lens;
+            let target_len = anime.target_lens.get(*idx as usize).unwrap();
+
+            cands.into_iter().map(move |ci| {
+                let source_len = source_lens.get(ci.index as usize).unwrap();
+
+                MatchRow {
+                    target_id: *idx,
+                    source_id: ci.index,
+                    shared_len: ci.shared_len,
+                    source_weighted: ci.shared_len / source_len,
+                    target_weighted: ci.shared_len / target_len,
+                }
             })
         })
         .collect::<Vec<_>>();

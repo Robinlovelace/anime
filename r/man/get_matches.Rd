@@ -2,13 +2,24 @@
 % Please edit documentation in R/anime.R
 \name{get_matches}
 \alias{get_matches}
-\title{Get the matches from an \code{anime} object}
+\title{Get Partial Matches}
 \usage{
 get_matches(x)
 }
 \arguments{
-\item{x}{An \code{anime} object}
+\item{x}{an \code{anime} object as created with \code{anime()}.}
+}
+\value{
+A data.frame with 5 columns:
+\itemize{
+\item \code{target_id}: the 1-based index of the target linestring
+\item \code{source_id}: the 1-based index of the source linestring
+\item \code{shared_len}: the shared length between the \code{source} and \code{target} in the CRS's units
+\item \code{source_weighted}: the \code{shared_len} divided by the length of the source linestring
+\item \code{target_weighted}: the \code{shared_len} divided by the length of the target linestring
+}
 }
 \description{
-Get the matches from an \code{anime} object
+Extract the partial matches from the \code{anime} object
+as a \code{data.frame}.
 }

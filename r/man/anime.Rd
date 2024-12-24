@@ -7,16 +7,16 @@
 anime(source, target, distance_tolerance = 10, angle_tolerance = 5)
 }
 \arguments{
-\item{source}{A geoarrow object containing the source lines}
+\item{source}{a linestring geometry. Must be handleable by \code{wk}.}
 
-\item{target}{A geoarrow object containing the target lines}
+\item{target}{a linestring geometry. Must be handleable by \code{wk}.}
 
-\item{distance_tolerance}{The maximum distance between two points to be considered a match}
+\item{distance_tolerance}{the maximum distance between two linestrings to be considered a match.}
 
-\item{angle_tolerance}{The maximum angle between two lines to be considered a match}
+\item{angle_tolerance}{the maximum angle difference between two lines to be considered a match.}
 }
 \value{
-A dataframe containing the matches
+an object of class \code{anime}
 }
 \description{
 Match two sets of lines

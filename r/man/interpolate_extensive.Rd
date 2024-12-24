@@ -7,10 +7,10 @@
 interpolate_extensive(x, ...)
 }
 \arguments{
-\item{x}{An \code{anime} object}
+\item{x}{an \code{anime} object.}
 
-\item{...}{Variables to interpolate (must be numeric vectors)}
+\item{...}{variables to interpolate (must be numeric vectors).}
 }
 \description{
-Interpolate extensive variables
+Interpolate values from the source geometry to the target geometry. Intensive properties are values which are independent of the geometry's size . These are values such as a density or temperature.
 }
