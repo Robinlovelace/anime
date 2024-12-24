@@ -53,9 +53,20 @@ as.data.frame.anime <- function(x, ...) {
   get_matches_(x)
 }
 
-#' Get the matches from an `anime` object
+#' Get Partial Matches 
 #' 
-#' @param x An `anime` object
+#' Extract the partial matches from the `anime` object 
+#' as a `data.frame`.
+#' 
+#' @param x an `anime` object as created with `anime()`.
+#' 
+#' @returns 
+#' A data.frame with 5 columns: 
+#' - `target_id`: the 1-based index of the target linestring
+#' - `source_id`: the 1-based index of the source linestring
+#' - `shared_len`: the shared length between the `source` and `target` in the CRS's units
+#' - `source_weighted`: the `shared_len` divided by the length of the source linestring
+#' - `target_weighted`: the `shared_len` divided by the length of the target linestring
 #' @export
 get_matches <- function(x) {
   if (!inherits(x, "anime")) {
