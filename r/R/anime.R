@@ -89,7 +89,7 @@ print.anime <- function(x, ...) {
 #' Interpolate values from the source geometry to the target geometry. Intensive properties are values which are independent of the geometry's size . These are values such as a density or temperature.
 #'
 #' @param x an `anime` object.
-#' @param ... Variables to interpolate (must be numeric vectors)
+#' @param ... variables to interpolate (must be numeric vectors).
 #' @export
 interpolate_extensive <- function(x, ...) {
   if (!inherits(x, "anime")) {
@@ -123,7 +123,7 @@ interpolate_extensive <- function(x, ...) {
 
 
 #' Interpolate extensive variables
-#'
+#' Interpolate values from the source geometry to the target geometry. Extensive properties are values which are dependent upon the geometry's size. Extensive properties would be a population or length. 
 #' @inheritParams interpolate_extensive
 #' @export
 interpolate_intensive <- function(x, ...) {
