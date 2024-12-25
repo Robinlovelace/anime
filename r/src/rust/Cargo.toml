@@ -14,8 +14,12 @@ arrow_extendr = "53.0.0"
 extendr-api = '*'
 geoarrow = "0.4.0-beta.3"
 itertools = "0.12.0"
-anime = "0.1.2"
+anime = { git = "https://github.com/josiahparry/anime" }
 
 
 [patch.crates-io]
 extendr-api = {git = "https://github.com/extendr/extendr", rev = "2c2749f5e9d13d5628399c8779c47d420246a4a1"}
+
+
+[patch."https://github.com/josiahparry/anime"]
+anime = {path = "../../../rust"}

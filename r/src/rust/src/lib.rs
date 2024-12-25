@@ -141,11 +141,11 @@ fn get_matches_(anime: ExternalPtr<Anime>) -> Robj {
             let target_len = anime.target_lens.get(*idx as usize).unwrap();
 
             cands.into_iter().map(move |ci| {
-                let source_len = source_lens.get(ci.index as usize).unwrap();
+                let source_len = source_lens.get(ci.source_index).unwrap();
 
                 MatchRow {
-                    target_id: *idx,
-                    source_id: ci.index,
+                    target_id: *idx as i32,
+                    source_id: ci.source_index as i32,
                     shared_len: ci.shared_len,
                     source_weighted: ci.shared_len / source_len,
                     target_weighted: ci.shared_len / target_len,
