@@ -1,4 +1,4 @@
-pub mod interpolate;
+mod interpolate;
 mod overlap;
 pub mod structs;
 
@@ -11,10 +11,11 @@ use rstar::primitives::{CachedEnvelope, GeomWithData};
 use std::{cell::OnceCell, collections::BTreeMap, error::Error, fmt::Display};
 
 /// Anime Error Type
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum AnimeError {
     IncorrectLength,
     MatchesNotFound,
+    AlreadyMatched(MatchesMap),
 }
 
 impl Display for AnimeError {
@@ -22,6 +23,7 @@ impl Display for AnimeError {
         match self {
             AnimeError::IncorrectLength => write!(f, "Variable to interpolate must have the same number of observations as the `target` lines"),
             AnimeError::MatchesNotFound => write!(f, "`matches` needs to be instantiated with `self.find_matches()`"),
+            AnimeError::AlreadyMatched(_) => write!(f, "matches already found.")
         }
     }
 }
@@ -102,79 +104,120 @@ impl Anime {
     /// Find candidate matches between source and target
     ///
     /// The matches can only be found once for each source and target pair.
-    pub fn find_matches(&mut self) -> Result<&mut Anime, MatchesMap> {
-        let mut matches: MatchesMap = BTreeMap::new();
-        let candidates = self
-            .source_tree
-            .intersection_candidates_with_other_tree(&self.target_tree);
+    pub fn find_matches(&mut self) -> Result<&mut Anime, AnimeError> {
+        let matches = find_candidate_matches(
+            &self.source_tree,
+            &self.target_tree,
+            self.angle_tolerance,
+            self.distance_tolerance,
+        );
+        self.matches
+            .set(matches)
+            .map_err(|e| AnimeError::AlreadyMatched(e))?;
+        Ok(self)
+    }
 
-        candidates.for_each(|(cx, cy)| {
-            let xbb = cx.geom().bounding_rect();
-            let ybb = cy.geom().0.bounding_rect();
+    /// Insert linestring geometries and find matches
+    pub fn new(
+        source: impl Iterator<Item = geo_types::LineString>,
+        target: impl Iterator<Item = geo_types::LineString>,
+        distance_tolerance: f64,
+        angle_tolerance: f64,
+    ) -> Self {
+        let mut source_lens = Vec::new();
+        let mut target_lens = Vec::new();
+        let source_tree = create_source_rtree(source, &mut source_lens);
+        let target_tree = create_target_rtree(target, &mut target_lens, distance_tolerance);
+        let matches = find_candidate_matches(
+            &source_tree,
+            &target_tree,
+            angle_tolerance,
+            distance_tolerance,
+        );
+        Self {
+            distance_tolerance,
+            angle_tolerance,
+            source_tree,
+            source_lens,
+            target_tree,
+            target_lens,
+            matches: OnceCell::from(matches),
+        }
+    }
+}
+fn find_candidate_matches(
+    source_tree: &SourceTree,
+    target_tree: &TargetTree,
+    angle_tolerance: f64,
+    distance_tolerance: f64,
+) -> MatchesMap {
+    let mut matches: MatchesMap = BTreeMap::new();
+    let candidates = source_tree.intersection_candidates_with_other_tree(target_tree);
 
-            // extract cached slopes and index positions
-            let (i, x_slope) = cx.data;
-            let (j, y_slope) = cy.data;
+    candidates.for_each(|(cx, cy)| {
+        let xbb = cx.geom().bounding_rect();
+        let ybb = cy.geom().0.bounding_rect();
 
-            // convert calculated slopes to degrees
-            let x_deg = x_slope.atan().to_degrees();
-            let y_deg = y_slope.atan().to_degrees();
+        // extract cached slopes and index positions
+        let (i, x_slope) = cx.data;
+        let (j, y_slope) = cy.data;
 
-            // compare slopes:
-            let is_tolerant = (x_deg - y_deg).abs() < self.angle_tolerance;
+        // convert calculated slopes to degrees
+        let x_deg = x_slope.atan().to_degrees();
+        let y_deg = y_slope.atan().to_degrees();
 
-            // if the slopes are within tolerance then we check for overlap
-            if is_tolerant {
-                let xx_range = x_range(&xbb);
-                let xy_range = x_range(&ybb);
-                let x_overlap = overlap_range(xx_range, xy_range);
-                let y_overlap = overlap_range(y_range(&xbb), y_range(&ybb));
+        // compare slopes:
+        let is_tolerant = (x_deg - y_deg).abs() < angle_tolerance;
 
-                // if theres overlap then we do a distance based check
-                // following, check that they're within distance tolerance,
-                // if so, calculate the shared length
-                if x_overlap.is_some() || y_overlap.is_some() {
-                    // calculate the distance from the line segment
-                    // if its within our threshold we include it;
-                    let d = cy.geom().distance(cx.geom());
+        // if the slopes are within tolerance then we check for overlap
+        if is_tolerant {
+            let xx_range = x_range(&xbb);
+            let xy_range = x_range(&ybb);
+            let x_overlap = overlap_range(xx_range, xy_range);
+            let y_overlap = overlap_range(y_range(&xbb), y_range(&ybb));
 
-                    // if distance is less than or equal to tolerance, add the key
-                    if d <= self.distance_tolerance {
-                        let shared_len = if x_slope.atan().to_degrees() <= 45.0 {
-                            if x_overlap.is_some() {
-                                let (p1, p2) =
-                                    solve_no_y_overlap(x_overlap.unwrap(), cx.geom(), &x_slope);
+            // if theres overlap then we do a distance based check
+            // following, check that they're within distance tolerance,
+            // if so, calculate the shared length
+            if x_overlap.is_some() || y_overlap.is_some() {
+                // calculate the distance from the line segment
+                // if its within our threshold we include it;
+                let d = cy.geom().distance(cx.geom());
 
-                                Euclidean::distance(&p1, &p2)
-                            } else {
-                                0.0
-                            }
-                        } else if y_overlap.is_some() {
+                // if distance is less than or equal to tolerance, add the key
+                if d <= distance_tolerance {
+                    let shared_len = if x_slope.atan().to_degrees() <= 45.0 {
+                        if x_overlap.is_some() {
                             let (p1, p2) =
-                                solve_no_x_overlap(y_overlap.unwrap(), cx.geom(), &x_slope);
+                                solve_no_y_overlap(x_overlap.unwrap(), cx.geom(), &x_slope);
+
                             Euclidean::distance(&p1, &p2)
                         } else {
                             0.0
-                        };
-                        // add 1 for R indexing
-                        // ensures that no duplicates are inserted. Creates a new empty vector is needed
-                        let entry = matches.entry(j).or_default();
-
-                        if let Some(tuple) = entry.iter_mut().find(|x| x.source_index == i) {
-                            tuple.shared_len += shared_len;
-                        } else {
-                            entry.extend(std::iter::once(MatchCandidate {
-                                source_index: i,
-                                shared_len,
-                            }));
                         }
+                    } else if y_overlap.is_some() {
+                        let (p1, p2) = solve_no_x_overlap(y_overlap.unwrap(), cx.geom(), &x_slope);
+                        Euclidean::distance(&p1, &p2)
+                    } else {
+                        0.0
+                    };
+                    // add 1 for R indexing
+                    // ensures that no duplicates are inserted. Creates a new empty vector is needed
+                    let entry = matches.entry(j).or_default();
+
+                    if let Some(tuple) = entry.iter_mut().find(|x| x.source_index == i) {
+                        tuple.shared_len += shared_len;
+                    } else {
+                        entry.push(MatchCandidate {
+                            source_index: i,
+                            shared_len,
+                        });
                     }
                 }
             }
-        });
-        self.matches.set(matches)?;
-        Ok(self)
-    }
+        }
+    });
+    matches
 }
 
 fn create_source_rtree(
