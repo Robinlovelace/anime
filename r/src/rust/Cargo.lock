@@ -49,10 +49,9 @@ dependencies = [
 [[package]]
 name = "anime"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8435d82d6c0ce292ef8419aa0d6b1671ce7b522e78e8080fbe45a5d9c8322d40"
 dependencies = [
- "geo 0.27.0",
+ "geo",
+ "geo-traits",
  "geo-types",
  "rstar 0.11.0",
 ]
@@ -598,23 +597,6 @@ checksum = "8bf7cc16383c4b8d58b9905a8509f02926ce3058053c056376248d958c9df1e8"
 
 [[package]]
 name = "geo"
-version = "0.27.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4841b40fdbccd4b7042bd6195e4de91da54af34c50632e371bcbfcdfb558b873"
-dependencies = [
- "earcutr",
- "float_next_after",
- "geo-types",
- "geographiclib-rs",
- "log",
- "num-traits",
- "robust",
- "rstar 0.11.0",
- "spade",
-]
-
-[[package]]
-name = "geo"
 version = "0.29.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34f0e6e028c581e82e6822a68869514e94c25e7f8ea669a2d8595bdf7461ccc5"
@@ -683,7 +665,7 @@ dependencies = [
  "chrono",
  "dbase",
  "enum-as-inner",
- "geo 0.29.3",
+ "geo",
  "geo-index",
  "geo-traits",
  "geozero",
