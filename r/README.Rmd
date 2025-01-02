@@ -1,0 +1,91 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# anime
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of anime is to ...
+
+## Installation
+
+You can install the development version of anime from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("JosiahParry/anime/r")
+```
+
+```{r}
+library(anime)
+```
+
+## Example
+
+This is a basic example, with the target data `x` and the source data `y`. The attributes in the `y` data will be added to the geometries of `x`.
+
+```{r example-input}
+library(anime)
+# This is the target data, the attributes in the y data will be added to the geometries of x
+x <- sf::read_sf("https://github.com/JosiahParry/anime/raw/refs/heads/main/r/data-raw/geojson/x_negative.geojson")
+# This is the source data
+y <- sf::read_sf("https://github.com/JosiahParry/anime/raw/refs/heads/main/r/data-raw/geojson/y_negative.geojson")
+names(y)
+names(x)
+x
+y
+y |>
+  mutate(value = as.character(value)) |>
+  plot()
+plot(sf::st_geometry(x), add = TRUE)
+```
+
+The package returns the matches between the target and source data:
+
+```{r}
+res <- anime::anime(x, y)
+res_df <- as.data.frame(res)
+res_df
+```
+
+We can use this information to join the attributes of the source data to the target data:
+
+```{r}
+library(dplyr)
+y_matched <- left_join(
+  y |>
+    mutate(source_id = row_number() - 1) |>
+    sf::st_drop_geometry(),
+  res_df
+)
+y_aggregated <- y_matched |>
+  group_by(id = target_id + 1) |>
+  summarise(
+    value = weighted.mean(value, source_weighted, na.rm = TRUE)
+  )
+x_joined <- left_join(
+  x,
+  y_aggregated
+)
+```
+
+The result can be plotted as follows:
+
+```{r}
+x_joined |>
+  transmute(value = as.character(round(value, 1))) |>
+  plot()
+```
