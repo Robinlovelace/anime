@@ -20,5 +20,5 @@ anime = {git = "https://github.com/josiahparry/anime"}
 extendr-api = {git = "https://github.com/extendr/extendr", rev = "2c2749f5e9d13d5628399c8779c47d420246a4a1"}
 
 # uncomment for local development
-# [patch."https://github.com/josiahparry/anime"]
-# anime = { path = "../../../rust" }
+[patch."https://github.com/josiahparry/anime"]
+anime = { path = "../../../rust" }
