@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of anime is to ...
+The goal of anime is to join the attributes of two spatial datasets based on the level of overlap between their linestrings.
 
 ## Installation
 
@@ -38,7 +38,6 @@ library(anime)
 This is a basic example, with the target data `x` and the source data `y`. The attributes in the `y` data will be added to the geometries of `x`.
 
 ```{r example-input}
-library(anime)
 # This is the target data, the attributes in the y data will be added to the geometries of x
 x <- sf::read_sf("https://github.com/JosiahParry/anime/raw/refs/heads/main/r/data-raw/geojson/x_negative.geojson")
 # This is the source data
@@ -67,14 +66,14 @@ We can use this information to join the attributes of the source data to the tar
 library(dplyr)
 y_matched <- left_join(
   y |>
-    mutate(source_id = row_number() - 1) |>
+    mutate(target_id = row_number() - 1) |>
     sf::st_drop_geometry(),
   res_df
 )
 y_aggregated <- y_matched |>
-  group_by(id = target_id + 1) |>
+  group_by(id = source_id + 1) |>
   summarise(
-    value = weighted.mean(value, source_weighted, na.rm = TRUE)
+    value = weighted.mean(value, target_weighted, na.rm = TRUE)
   )
 x_joined <- left_join(
   x,
