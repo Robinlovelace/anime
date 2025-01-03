@@ -113,20 +113,20 @@ plot(source, add = TRUE)
 ```{r}
 #| label: cycle_superhighway_output
 res <- anime::anime(
-  target,
   source,
+  target,
   distance_tolerance = 15,
   angle_tolerance = 20
 )
 res_df <- as.data.frame(res)
 y_matched <- left_join(
   source |>
-    mutate(target_id = row_number() - 1) |>
+    mutate(source_id = row_number() - 1) |>
     sf::st_drop_geometry(),
   res_df
 )
 y_aggregated <- y_matched |>
-  group_by(id = source_id + 1) |>
+  group_by(id = target_id + 1) |>
   summarise(
     value = weighted.mean(value, target_weighted, na.rm = TRUE)
   )
@@ -136,6 +136,7 @@ x_joined <- left_join(
     mutate(id = row_number()),
   y_aggregated
 )
+summary(x_joined$value)
 # plot(sf::st_geometry(target))
 # plot(sf::st_geometry(source), add = TRUE)
 x_joined |>
