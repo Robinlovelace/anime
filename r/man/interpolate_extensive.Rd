@@ -4,13 +4,15 @@
 \alias{interpolate_extensive}
 \title{Interpolate extensive variables}
 \usage{
-interpolate_extensive(x, ...)
+interpolate_extensive(x, matches)
 }
 \arguments{
-\item{x}{an \code{anime} object.}
+\item{x}{a numeric variable with the same length as the source geometry}
 
-\item{...}{variables to interpolate (must be numeric vectors).}
+\item{matches}{an \code{anime} object created with \code{anime()}}
 }
 \description{
-Interpolate values from the source geometry to the target geometry. Intensive properties are values which are independent of the geometry's size . These are values such as a density or temperature.
+Interpolate values from the source geometry to the target geometry.
+Intensive properties are values which are independent of the geometry's size.
+These are values such as a density or temperature.
 }

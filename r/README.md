@@ -7,7 +7,7 @@
 <!-- badges: end -->
 
 The goal of anime is to join the attributes of two spatial datasets
-based on the level of overlap between their linestrings.
+based on the amount of overlap between their linestrings.
 
 ## Installation
 
@@ -21,234 +21,152 @@ pak::pak("JosiahParry/anime/r")
 
 ``` r
 library(anime)
-library(dplyr)
 ```
 
 ## Basic example
 
-This is a basic example, with the target data `x` and the source data
-`y`. The attributes in the `y` data will be added to the geometries of
-`x`.
+`anime` uses the concept of a `target` and `source` linestrings.
+
+`target` linestrings are matched *to* the the `source` linestrings. The
+amount of overlap between the `target` and `source` linestrings can be
+used to *interpolate attributes* from the `source` *onto* the `target`
+geometries.
+
+> [!IMPORTANT]
+>
+> Geometries *must* be planar—that is in a projected CRS.
 
 ``` r
-# This is the target data, the attributes in the y data will be added to the geometries of x
-x <- sf::read_sf("https://github.com/JosiahParry/anime/raw/refs/heads/main/r/data-raw/geojson/x_negative.geojson")
+target_fp <- "https://github.com/JosiahParry/anime/raw/refs/heads/main/r/data-raw/geojson/x_negative.geojson"
+source_fp <- "https://github.com/JosiahParry/anime/raw/refs/heads/main/r/data-raw/geojson/y_negative.geojson"
+
 # This is the source data
-y <- sf::read_sf("https://github.com/JosiahParry/anime/raw/refs/heads/main/r/data-raw/geojson/y_negative.geojson")
-names(y)
-#> [1] "value"    "geometry"
-names(x)
-#> [1] "id"       "geometry"
-x
-#> Simple feature collection with 3 features and 1 field
-#> Geometry type: LINESTRING
-#> Dimension:     XY
-#> Bounding box:  xmin: 0.5 ymin: -0.8 xmax: 5 ymax: 3
-#> Geodetic CRS:  WGS 84
-#> # A tibble: 3 × 2
-#>      id            geometry
-#>   <int>    <LINESTRING [°]>
-#> 1     1        (0.5 3, 1 1)
-#> 2     2 (2 0.5, 3 0.5, 4 0)
-#> 3     3    (4 -0.2, 5 -0.8)
-y
-#> Simple feature collection with 3 features and 1 field
-#> Geometry type: LINESTRING
-#> Dimension:     XY
-#> Bounding box:  xmin: 0 ymin: -1 xmax: 5 ymax: 3
-#> Geodetic CRS:  WGS 84
-#> # A tibble: 3 × 2
-#>   value         geometry
-#>   <int> <LINESTRING [°]>
-#> 1     1       (0 3, 1 0)
-#> 2     2       (1 0, 3 0)
-#> 3     3      (3 0, 5 -1)
-y |>
-  mutate(value = as.character(value)) |>
-  plot()
-plot(sf::st_geometry(x), add = TRUE)
+sources <- sf::read_sf(source_fp) 
+
+# This is the target data, the attributes in the source data will 
+# be added to the geometries of the target
+target <- sf::read_sf(target_fp) 
+
+plot(sf::st_geometry(sources), col = sources$value)
+plot(sf::st_geometry(target), add = TRUE)
 ```
 
-<img src="man/figures/README-example-input-1.png" width="100%" />
+<img src="man/figures/README-example-input-1.png"
+style="width:100.0%" />
 
-The package returns the matches between the target and source data:
+The lines are parallel but are not identical. The objective of `anime`
+is to find these partial matches.
 
 ``` r
-res <- anime::anime(
-  x,
-  y,
-  distance_tolerance = 1,
-  angle_tolerance = 20
+matches <- anime::anime(
+  sources,
+  target,
+  distance_tolerance = 0.5,
+  angle_tolerance = 5
 )
-res_df <- as.data.frame(res)
-res_df
+
+matches_tbl <- get_matches(matches)
+matches_tbl
+#> # A data frame: 4 × 5
 #>   target_id source_id shared_len source_weighted target_weighted
-#> 1         0         0   2.061553        1.000000       0.6519202
-#> 2         1         1   1.000000        0.472136       0.5000000
-#> 3         2         2   1.166190        1.000000       0.5215362
-#> 4         2         1   1.118034        0.527864       0.5000000
+#> *     <int>     <int>      <dbl>           <dbl>           <dbl>
+#> 1         1         1       1.58             0.5           0.767
+#> 2         2         3       1.12             0.5           0.528
+#> 3         2         2       1                0.5           0.472
+#> 4         3         3       1.12             0.5           0.959
 ```
 
 We can use this information to join the attributes of the source data to
-the target data:
+the target data. In this example we take values from `sources` and use
+`reframe()` to create a new data.frame of interpolated values.
+
+> [!NOTE]
+>
+> `interpolate_intensive()` and `interpolate_extensive()` require
+> numeric variables from the `source` and return a numeric vector with
+> the same lengths as `target`.
 
 ``` r
 library(dplyr)
-y_matched <- left_join(
-  y |>
-    mutate(target_id = row_number() - 1) |>
-    sf::st_drop_geometry(),
-  res_df
-)
-#> Joining with `by = join_by(target_id)`
-y_aggregated <- y_matched |>
-  group_by(id = source_id + 1) |>
-  summarise(
-    value = weighted.mean(value, target_weighted, na.rm = TRUE)
-  )
-x_joined <- left_join(
-  x,
-  y_aggregated
-)
-#> Joining with `by = join_by(id)`
+#> 
+#> Attaching package: 'dplyr'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     filter, lag
+#> The following objects are masked from 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
+
+# interpolate values
+interpolated_from_source <- sources |> 
+  reframe(value = interpolate_intensive(value, matches))
+
+# bind them together
+interpolated_target <- bind_cols(target, interpolated_from_source)
 ```
 
 The result can be plotted as follows:
 
 ``` r
-x_joined |>
-  transmute(value = as.character(round(value, 1))) |>
-  plot()
+plot(interpolated_target["value"])
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-5-1.png"
+style="width:100.0%" />
 
 ## Example with real data
 
 Imagine the following use case: we want to know how fast traffic moves
-on roads alongside the Leeds-Bradford cycle superhighway.
+on roads alongside the Leeds-Bradford cycle superhighway. Notice that
+the objects are transformed to `EPSG:27700` so that they are in a
+projected CRS\>
 
 ``` r
-target <- sf::read_sf("https://github.com/nptscot/match_linestrings/releases/download/v0.1/leeds_bradford_cycle_superhighway_linestrings.geojson") |>
+target_fp <- "https://github.com/nptscot/match_linestrings/releases/download/v0.1/leeds_bradford_cycle_superhighway_linestrings.geojson"
+source_fp <- "https://github.com/nptscot/match_linestrings/releases/download/v0.1/leeds_transport_network_near_superhighway.geojson"
+
+target <- sf::read_sf(target_fp) |>
   sf::st_transform(27700)
-source <- sf::read_sf("https://github.com/nptscot/match_linestrings/releases/download/v0.1/leeds_transport_network_near_superhighway.geojson") |>
+
+sources <- sf::read_sf(source_fp) |>
   sf::st_transform(27700) |>
   transmute(value = as.numeric(gsub(" mph", "", maxspeed))) 
+
 plot(sf::st_geometry(target))
-plot(source, add = TRUE)
+plot(sources, add = TRUE)
 ```
 
-<img src="man/figures/README-cycle_superhighway_input-1.png" width="100%" />
+<img src="man/figures/README-cycle_superhighway_input-1.png"
+style="width:100.0%" />
 
 ``` r
-res <- anime::anime(
+matches <- anime::anime(
+  sources,
   target,
-  source,
   distance_tolerance = 15,
-  angle_tolerance = 20
+  angle_tolerance = 5
 )
-res_df <- as.data.frame(res)
-y_matched <- left_join(
-  source |>
-    mutate(target_id = row_number() - 1) |>
-    sf::st_drop_geometry(),
-  res_df
-)
-#> Joining with `by = join_by(target_id)`
-y_aggregated <- y_matched |>
-  group_by(id = source_id + 1) |>
-  summarise(
-    value = weighted.mean(value, target_weighted, na.rm = TRUE)
-  )
-summary(y_aggregated$id)
+
+target_interpolated <- target |> 
+  mutate(value = interpolate_intensive(sources$value, matches))
+
+summary(sources$value)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-#>    2.00   35.25   77.50   67.20  100.50  126.00       1
-x_joined <- left_join(
-  target |>
-    mutate(id = row_number()),
-  y_aggregated
-)
-#> Joining with `by = join_by(id)`
-# plot(sf::st_geometry(target))
-# plot(sf::st_geometry(source), add = TRUE)
-x_joined |>
-  transmute(value) |>
-  plot(lwd = 5)
-```
-
-<img src="man/figures/README-cycle_superhighway_output-1.png" width="100%" />
-
-## Comparison with `stplanr::rnet_join`
-
-A similar result can be obtained using the `stplanr::rnet_join`
-function. As shown in the results and benchmark below, the `anime`
-implementation is much faster than the `stplanr` implementation and
-produces a better result.
-
-``` r
-sf::st_crs(x) <- 27700
-sf::st_crs(y) <- 27700
-x_joined <- stplanr::rnet_join(
-  x,
-  y,
-  dist = 1,
-  max_angle_diff = 30,
-  segment_length = 0.1
-)
-# x_joined
-# plot(x_joined["value"])
-# mapview::mapview(x_joined["value"]) +
-#   mapview::mapview(x) +
-#   mapview::mapview(y)
+#>    5.00   20.00   30.00   28.16   40.00   40.00     925
+summary(target_interpolated$value)
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#>    0.00    5.00   30.00   22.98   30.00   40.00     104
 ```
 
 ``` r
-x_aggregated <- x_joined |>
-  sf::st_drop_geometry() |>
-  group_by(id) |>
-  summarise(
-    value = weighted.mean(value, length_y)
-  )
-x_joined <- left_join(
-  x,
-  x_aggregated
-)
-x_joined |>
-  transmute(value = as.character(round(value, 1))) |>
-  plot()
-x_joined$value
-#> [1] 1 3 3
+library(ggplot2)
+
+ ggplot() +
+  geom_sf(aes(color = value), data = sources, alpha = 0.2) +
+  geom_sf(aes(color = value), data = sf::st_crop(target_interpolated, sf::st_bbox(sources)))
+#> Warning: attribute variables are assumed to be spatially constant throughout
+#> all geometries
 ```
 
-## Benchmark
-
-``` r
-stplanr_implementation <- function() {
-  x_joined <- stplanr::rnet_join(
-    x,
-    y,
-    dist = 1,
-    max_angle_diff = 30,
-    segment_length = 0.1
-  )
-}
-anime_implmentation <- function() {
-  res <- anime::anime(
-    x,
-    y,
-    distance_tolerance = 1,
-    angle_tolerance = 20
-  )
-}
-bench::mark(
-  stplanr_implementation(),
-  anime_implmentation(),
-  check = FALSE
-) |>
-  select(expression, `itr/sec`, mem_alloc)
-#> # A tibble: 2 × 3
-#>   expression               `itr/sec` mem_alloc
-#>   <bch:expr>                   <dbl> <bch:byt>
-#> 1 stplanr_implementation()      9.98   130.6KB
-#> 2 anime_implmentation()        52.5     30.5KB
-```
+<img src="man/figures/README-unnamed-chunk-8-1.png"
+style="width:100.0%" />
