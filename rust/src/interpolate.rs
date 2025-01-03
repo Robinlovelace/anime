@@ -12,9 +12,18 @@ pub enum Tensive {
     Ex,
 }
 
+pub struct InterpolatedValue {
+    pub target_id: usize,
+    pub value: f64,
+}
+
 impl Anime {
     /// Perform numeric attribute interpolation
-    pub fn interpolate(&self, var: &[f64], tensive: Tensive) -> Result<Vec<f64>, AnimeError> {
+    pub fn interpolate(
+        &self,
+        var: &[f64],
+        tensive: Tensive,
+    ) -> Result<Vec<InterpolatedValue>, AnimeError> {
         match tensive {
             Tensive::In => self.interpolate_intensive(var),
             Tensive::Ex => self.interpolate_extensive(var),
@@ -31,7 +40,10 @@ impl Anime {
     /// $$
     /// \hat{Y}_j = \sum_{i} \frac{SL_{ij}}{length(i)} \times Y_i
     /// $$
-    pub fn interpolate_extensive(&self, source_var: &[f64]) -> Result<Vec<f64>, AnimeError> {
+    pub fn interpolate_extensive(
+        &self,
+        source_var: &[f64],
+    ) -> Result<Vec<InterpolatedValue>, AnimeError> {
         // Check if `source_var` matches the number of source geometries
         if source_var.len() != self.source_lens.len() {
             return Err(AnimeError::IncorrectLength);
@@ -43,8 +55,8 @@ impl Anime {
         // Interpolate extensive variable
         let res = matches
             .iter()
-            .map(|(_, matches)| {
-                matches.iter().fold(0.0, |acc, mi| {
+            .map(|(target_id, matches)| {
+                let value = matches.iter().fold(0.0, |acc, mi| {
                     let source_idx = mi.source_index;
                     let shared_len = mi.shared_len;
 
@@ -53,9 +65,13 @@ impl Anime {
 
                     // Weighted contribution of source variable
                     acc + (source_var[source_idx] * wt)
-                })
+                });
+                InterpolatedValue {
+                    target_id: *target_id,
+                    value,
+                }
             })
-            .collect::<Vec<f64>>();
+            .collect::<Vec<_>>();
 
         Ok(res)
     }
@@ -81,7 +97,10 @@ impl Anime {
     /// The result is a weighted mean of the source variable values, where the weight
     /// is based on the shared length between the source and the target, normalized by
     /// the length of the target.
-    pub fn interpolate_intensive(&self, source_var: &[f64]) -> Result<Vec<f64>, AnimeError> {
+    pub fn interpolate_intensive(
+        &self,
+        source_var: &[f64],
+    ) -> Result<Vec<InterpolatedValue>, AnimeError> {
         let nv = source_var.len();
         let n_tar = self.source_lens.len(); // Assuming target_lens represent target lengths.
 
@@ -110,39 +129,19 @@ impl Anime {
                     });
 
                 // If the total weight is greater than zero, compute the weighted mean
-                if denominator > 0.0 {
+                let value = if denominator > 0.0 {
                     numerator / denominator
                 } else {
                     0.0 // If no overlap, return 0 or handle differently
+                };
+
+                InterpolatedValue {
+                    target_id: *target_idx,
+                    value,
                 }
             })
-            .collect::<Vec<f64>>();
+            .collect::<Vec<_>>();
 
         Ok(res)
     }
 }
-
-// rnet_aggregate_extensive <- function(
-//     x, y, matches, ...,
-//     y_len = as.numeric(sf::st_length(y))
-//   ) {
-//   # capture variables
-//   vars <- rlang::ensyms(...)
-//   # get var-names
-//   var_names <- vapply(vars, rlang::as_string, character(1))
-//   # TODO validate variables are in y before subsetting
-//   # extract j index
-//   j <- matches$j
-//   # subset vars by j to get ij pairs
-//   ij <- rlang::set_names(lapply(var_names, \(.x) y[[.x]][j]), var_names)
-//   # combine into 1 df
-//   dplyr::bind_cols(matches, ij) |>
-//     dplyr::mutate(
-//       wt = shared_len / as.numeric(y_len[j])
-//     ) |>
-//     dplyr::group_by(i) |>
-//     dplyr::summarise(dplyr::across(
-//       -all_of(c("j", "shared_len", "wt")),
-//       ~ sum(.x * wt, na.rm = TRUE)
-//     ))
-// }

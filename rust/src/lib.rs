@@ -1,4 +1,4 @@
-mod interpolate;
+pub mod interpolate;
 mod overlap;
 pub mod structs;
 
@@ -47,7 +47,7 @@ pub struct MatchCandidate {
 
 /// Stores match length
 ///
-/// The BTreeMap key is the index of the source geometry
+/// The BTreeMap key is the index of the target geometry
 /// whereas the entry contains
 pub type MatchesMap = BTreeMap<usize, Vec<MatchCandidate>>;
 

@@ -2,17 +2,17 @@
 % Please edit documentation in R/anime.R
 \name{interpolate_intensive}
 \alias{interpolate_intensive}
-\title{Interpolate extensive variables
-Interpolate values from the source geometry to the target geometry. Extensive properties are values which are dependent upon the geometry's size. Extensive properties would be a population or length.}
+\title{Interpolate extensive variables}
 \usage{
-interpolate_intensive(x, ...)
+interpolate_intensive(x, matches)
 }
 \arguments{
-\item{x}{an \code{anime} object.}
+\item{x}{a numeric variable with the same length as the source geometry}
 
-\item{...}{variables to interpolate (must be numeric vectors).}
+\item{matches}{an \code{anime} object created with \code{anime()}}
 }
 \description{
-Interpolate extensive variables
-Interpolate values from the source geometry to the target geometry. Extensive properties are values which are dependent upon the geometry's size. Extensive properties would be a population or length.
+Interpolate values from the source geometry to the target geometry.
+Extensive properties are values which are dependent upon the geometry's size.
+Extensive properties would be a population or length.
 }

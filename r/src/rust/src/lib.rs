@@ -95,14 +95,24 @@ fn anime_print_helper(x: ExternalPtr<Anime>) -> List {
         source_fts = x.source_lens.len(),
         target_fts = x.target_lens.len(),
         angle_tolerance = x.angle_tolerance,
-        distance_tolerance = x.distance_tolerance
+        distance_tolerance = x.distance_tolerance,
+        n_matches = x.matches.get().unwrap().len()
     )
 }
 #[extendr]
 fn interpolate_extensive_(source_var: &[f64], anime: ExternalPtr<Anime>) -> Doubles {
     let res = anime.interpolate_extensive(source_var);
     match res {
-        Ok(r) => Doubles::from_values(r),
+        Ok(r) => {
+            let mut res = (0..anime.target_lens.len())
+                .into_iter()
+                .map(|_| Rfloat::na())
+                .collect::<Doubles>();
+            for v in r {
+                res.set_elt(v.target_id, Rfloat::from(v.value));
+            }
+            res
+        }
         Err(e) => throw_r_error(format!(
             "Failed to perform extensive interpolation: {:?}",
             e.to_string()
@@ -114,7 +124,16 @@ fn interpolate_extensive_(source_var: &[f64], anime: ExternalPtr<Anime>) -> Doub
 fn interpolate_intensive_(source_var: &[f64], anime: ExternalPtr<Anime>) -> Doubles {
     let res = anime.interpolate_intensive(source_var);
     match res {
-        Ok(r) => Doubles::from_values(r),
+        Ok(r) => {
+            let mut res = (0..anime.target_lens.len())
+                .into_iter()
+                .map(|_| Rfloat::na())
+                .collect::<Doubles>();
+            for v in r {
+                res.set_elt(v.target_id, Rfloat::from(v.value));
+            }
+            res
+        }
         Err(e) => throw_r_error(format!(
             "Failed to perform extensive interpolation: {:?}",
             e.to_string()
