@@ -100,6 +100,7 @@ x_joined |>
 Imagine the following use case: we want to know how fast traffic moves on roads alongside the Leeds-Bradford cycle superhighway. 
 
 ```{r}
+#| label: cycle_superhighway_input
 target <- sf::read_sf("https://github.com/nptscot/match_linestrings/releases/download/v0.1/leeds_bradford_cycle_superhighway_linestrings.geojson") |>
   sf::st_transform(27700)
 source <- sf::read_sf("https://github.com/nptscot/match_linestrings/releases/download/v0.1/leeds_transport_network_near_superhighway.geojson") |>
@@ -107,6 +108,39 @@ source <- sf::read_sf("https://github.com/nptscot/match_linestrings/releases/dow
   transmute(value = as.numeric(gsub(" mph", "", maxspeed))) 
 plot(sf::st_geometry(target))
 plot(source, add = TRUE)
+```
+
+```{r}
+#| label: cycle_superhighway_output
+res <- anime::anime(
+  target,
+  source,
+  distance_tolerance = 15,
+  angle_tolerance = 20
+)
+res_df <- as.data.frame(res)
+y_matched <- left_join(
+  source |>
+    mutate(target_id = row_number() - 1) |>
+    sf::st_drop_geometry(),
+  res_df
+)
+y_aggregated <- y_matched |>
+  group_by(id = source_id + 1) |>
+  summarise(
+    value = weighted.mean(value, target_weighted, na.rm = TRUE)
+  )
+summary(y_aggregated$id)
+x_joined <- left_join(
+  target |>
+    mutate(id = row_number()),
+  y_aggregated
+)
+# plot(sf::st_geometry(target))
+# plot(sf::st_geometry(source), add = TRUE)
+x_joined |>
+  transmute(value) |>
+  plot(lwd = 5)
 ```
 
 

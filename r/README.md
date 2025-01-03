@@ -22,14 +22,6 @@ pak::pak("JosiahParry/anime/r")
 ``` r
 library(anime)
 library(dplyr)
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
 ```
 
 ## Basic example
@@ -146,7 +138,45 @@ plot(sf::st_geometry(target))
 plot(source, add = TRUE)
 ```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
+<img src="man/figures/README-cycle_superhighway_input-1.png" width="100%" />
+
+``` r
+res <- anime::anime(
+  target,
+  source,
+  distance_tolerance = 15,
+  angle_tolerance = 20
+)
+res_df <- as.data.frame(res)
+y_matched <- left_join(
+  source |>
+    mutate(target_id = row_number() - 1) |>
+    sf::st_drop_geometry(),
+  res_df
+)
+#> Joining with `by = join_by(target_id)`
+y_aggregated <- y_matched |>
+  group_by(id = source_id + 1) |>
+  summarise(
+    value = weighted.mean(value, target_weighted, na.rm = TRUE)
+  )
+summary(y_aggregated$id)
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#>    2.00   35.25   77.50   67.20  100.50  126.00       1
+x_joined <- left_join(
+  target |>
+    mutate(id = row_number()),
+  y_aggregated
+)
+#> Joining with `by = join_by(id)`
+# plot(sf::st_geometry(target))
+# plot(sf::st_geometry(source), add = TRUE)
+x_joined |>
+  transmute(value) |>
+  plot(lwd = 5)
+```
+
+<img src="man/figures/README-cycle_superhighway_output-1.png" width="100%" />
 
 ## Comparison with `stplanr::rnet_join`
 
