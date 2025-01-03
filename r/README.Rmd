@@ -144,6 +144,23 @@ x_joined |>
   plot(lwd = 5)
 ```
 
+You can get the join more concisely with `interpolate_intensive()` as follows:
+
+```{r}
+sources_no_na <- source |>
+  filter(!is.na(value))
+matches <- anime::anime(
+  sources_no_na,
+  target,
+  distance_tolerance = 15,
+  angle_tolerance = 20
+)
+class(matches)
+interpolated_value = interpolate_intensive(sources_no_na$value, matches)
+target_interpolated <- target |> 
+  mutate(value = interpolate_intensive(sources_no_na$value, matches))
+```  
+
 
 
 ## Comparison with `stplanr::rnet_join`
