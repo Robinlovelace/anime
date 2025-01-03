@@ -139,23 +139,32 @@ plot(sources, add = TRUE)
 <img src="man/figures/README-cycle_superhighway_input-1.png"
 style="width:100.0%" />
 
+At present, interpolation cannot handle missing values. We must find
+matches without the features with missing values.
+
 ``` r
+# filter out missing values before matching
+sources_no_na <- filter(sources, !is.na(value))
+
+# find matches
 matches <- anime::anime(
-  sources,
+  sources_no_na,
   target,
-  distance_tolerance = 15,
-  angle_tolerance = 5
+  # 50 meters distance tolerance 
+  distance_tolerance = 50,
+  # 10° tolerance 
+  angle_tolerance = 10
 )
 
 target_interpolated <- target |> 
-  mutate(value = interpolate_intensive(sources$value, matches))
+  mutate(value = interpolate_intensive(sources_no_na$value, matches))
 
 summary(sources$value)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
 #>    5.00   20.00   30.00   28.16   40.00   40.00     925
 summary(target_interpolated$value)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-#>    0.00    5.00   30.00   22.98   30.00   40.00     104
+#>    0.00   24.51   30.00   28.07   39.77   40.00      68
 ```
 
 ``` r
