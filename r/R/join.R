@@ -13,12 +13,10 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' # Examples inspired by od2net Edinburgh tutorial
+#' # Example inspired by od2net Edinburgh tutorial
 #' # See https://od2net.org for more context
+#' # Using sf for geometry creation
 #' library(sf)
-#' 
-#' # Imagine source_lines is an enriched OSM network (e.g. from od2net)
-#' # and target_lines is a baseline network (e.g. OpenRoads)
 #' 
 #' source_lines = st_sf(
 #'   osm_id = 1:2,
@@ -47,10 +45,6 @@
 #'   columns = c("flow", "highway"),
 #'   aadt = "flow"
 #' )
-#' 
-#' # In this case, if both source lines match the target, 
-#' # 'flow' is summed because it's in 'aadt'.
-#' # 'highway' is chosen by majority shared length.
 #' }
 anime_join <- function(source,
                        target,
