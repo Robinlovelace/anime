@@ -5,29 +5,26 @@
 \title{Join attributes from a source network to a target network}
 \usage{
 anime_join(
-  source,
-  target,
+  x,
+  y,
   distance_tolerance = 10,
   angle_tolerance = 5,
-  prefix = "",
-  match_strength = 0,
-  columns = NULL
+  suffix = c(".x", ".y"),
+  match_strength = 0
 )
 }
 \arguments{
-\item{source}{An \code{sf} object or handleable geometry representing the source network.}
+\item{x}{An \code{sf} object or handleable geometry representing the target network.}
 
-\item{target}{An \code{sf} object or handleable geometry representing the target network.}
+\item{y}{An \code{sf} object or handleable geometry representing the source network.}
 
 \item{distance_tolerance}{The maximum distance between two linestrings to be considered a match.}
 
 \item{angle_tolerance}{The maximum angle difference between two lines to be considered a match.}
 
-\item{prefix}{A string prefix for the new columns. Default is "".}
+\item{suffix}{A character vector of length 2 used to disambiguate non-joined duplicate variables.}
 
 \item{match_strength}{A threshold for target_weighted to filter out weak matches (0 to 1). Default is 0.}
-
-\item{columns}{Character vector of columns to transfer. If NULL, transfers all columns except geometries and internal IDs.}
 }
 \value{
 The target object with joined attributes.
