@@ -17,9 +17,9 @@ anime_join(
 )
 }
 \arguments{
-\item{source}{An \code{sf} object or handleable geometry representing the source network.}
+\item{source}{A spatial object or data frame representing the source network.}
 
-\item{target}{An \code{sf} object or handleable geometry representing the target network.}
+\item{target}{A spatial object or data frame representing the target network.}
 
 \item{distance_tolerance}{The maximum distance between two linestrings to be considered a match.}
 
@@ -40,4 +40,46 @@ The target object with joined attributes.
 }
 \description{
 Join attributes from a source network to a target network
+}
+\examples{
+\dontrun{
+# Examples inspired by od2net Edinburgh tutorial
+# See https://od2net.org for more context
+library(sf)
+
+# Imagine source_lines is an enriched OSM network (e.g. from od2net)
+# and target_lines is a baseline network (e.g. OpenRoads)
+
+source_lines = st_sf(
+  osm_id = 1:2,
+  flow = c(100, 200),
+  highway = c("residential", "primary"),
+  geometry = st_sfc(
+    st_linestring(matrix(c(0,0, 10,0), ncol=2, byrow=TRUE)),
+    st_linestring(matrix(c(0,1, 10,1), ncol=2, byrow=TRUE))
+  ),
+  crs = 27700
+)
+
+target_lines = st_sf(
+  id = 1,
+  geometry = st_sfc(
+    st_linestring(matrix(c(0,0.1, 10,0.1), ncol=2, byrow=TRUE))
+  ),
+  crs = 27700
+)
+
+# Joining with AADT-style aggregation (summing parallel segments)
+joined = anime_join(
+  source = source_lines,
+  target = target_lines,
+  distance_tolerance = 1,
+  columns = c("flow", "highway"),
+  aadt = "flow"
+)
+
+# In this case, if both source lines match the target, 
+# 'flow' is summed because it's in 'aadt'.
+# 'highway' is chosen by majority shared length.
+}
 }
