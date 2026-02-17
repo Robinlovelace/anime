@@ -119,9 +119,10 @@ anime_join <- function(source,
                        by.x = "source_id", by.y = "row_idx_internal", all.x = TRUE)
             
             # Aggregate shared_len by target_id and category
-            # Use formula with column name directly
-            formula_str <- paste("shared_len ~ target_id +", col)
-            agg <- aggregate(as.formula(formula_str), data = m, sum)
+            # We use a formula that's safer for varying column names
+            agg <- aggregate(m$shared_len, by = list(target_id = m$target_id, val = m[[col]]), sum)
+            names(agg)[2] <- col
+            names(agg)[3] <- "shared_len"
             
             # Pick the max shared_len for each target_id
             winners <- agg[order(agg$target_id, -agg$shared_len), ]
