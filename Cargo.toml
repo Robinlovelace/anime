@@ -18,7 +18,7 @@ anime = { path = "rust" }
 arrow = {version = "55", default-features = false }
 geo = "0.29.3"
 geo-traits = "0.3.0"
-geo-types = { version = "0.7.12", features = ["use-rstar_0_11"] }
+
 geoarrow = "0.4.0"
 geoarrow-array = "0.4.0"
 rstar = "0.11.0"

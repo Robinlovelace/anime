@@ -18,4 +18,5 @@ geo = { workspace = true }
 geo-traits = { workspace = true }
 geoarrow = { workspace = true }
 geoarrow-array = { workspace = true }
+geo-types = { version = "0.7.12", features = ["use-rstar_0_11"] }
 itertools = "0.12.0"
