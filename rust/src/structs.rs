@@ -112,7 +112,7 @@ mod tests {
     fn test_tarline_distance() {
         let tarline = TarLine(
             Line::new(coord! {x: 0.0, y: 0.0}, coord! {x: 10.0, y: 0.0}),
-            1.0
+            1.0,
         );
         let other = Line::new(coord! {x: 0.0, y: 3.0}, coord! {x: 10.0, y: 3.0});
 

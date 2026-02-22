@@ -8,7 +8,7 @@ if (!requireNamespace("fs")) {
 }
 
 if (!requireNamespace("rextendr")) {
-  error("bootstrap.R requires `fs` to be installed.")
+  error("bootstrap.R requires `rextendr` to be installed.")
 }
 
 
@@ -77,7 +77,6 @@ workspace_toml <- read_toml(
 # extract workspace specific metadata from the manifest path
 workspace_fields <- get_item(workspace_toml, "workspace")
 
-
 # workspace members that are deps index:
 workspace_idx <- which(
   pkg_metadata$packages$name %in% names(pkg_deps)
@@ -95,12 +94,22 @@ workspace_member_dep_paths <- basename(
 # "." is the R package workspace info
 workspace_fields$members <- c(".", workspace_member_dep_paths)
 
+for (i in seq_along(workspace_fields$dependencies)) {
+  dep <- workspace_fields$dependencies[[i]]
+  if (is.list(dep)) {
+    # cast to list
+    dep$features <- as.list(dep$features)
+    workspace_fields$dependencies[[i]] <- dep
+  }
+}
+
 # iterate through deps and copy them to the workspace
 for (.dep in non_reg_deps$path) {
   dest <- file.path("src/rust", basename(.dep))
   info("Copying dep", .dep, " into ", dest)
   fs::dir_copy(.dep, dest, overwrite = TRUE)
 }
+
 
 # insert the workspace settings into the R package's Cargo.toml
 info("Updating workspace settings!")
