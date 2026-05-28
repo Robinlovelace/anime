@@ -8,7 +8,11 @@
 #' @param match_strength A threshold for target_weighted to filter out weak matches. Default is 0.
 #' @param columns Character vector of columns to transfer. If NULL, transfers all columns except geometries and internal IDs.
 #' @param extensive Character vector of columns to treat as extensive (summed by source weight).
-#' @param target_scaled Character vector of columns to treat as target-scaled (summed if parallel, averaged if series, using target weight).
+#' @param flow Character vector of columns representing network flow or volume. 
+#'   Attributes in these columns are aggregated defensively: summed when overlapping/parallel 
+#'   lines are matched, and averaged when matched linestrings are in series. This is specifically 
+#'   designed for variables like traffic volume (e.g., Average Annual Daily Traffic / AADT) 
+#'   and flow volume on river networks.
 #' @return The target object with joined attributes.
 #' @export
 anime_join <- function(source,
@@ -19,7 +23,7 @@ anime_join <- function(source,
                        match_strength = 0,
                        columns = NULL,
                        extensive = NULL,
-                       target_scaled = NULL) {
+                       flow = NULL) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package \"sf\" is required for anime_join to work. Please install it.", call. = FALSE)
   }
@@ -29,7 +33,7 @@ anime_join <- function(source,
   }
 
   extensive <- extensive %||% character()
-  target_scaled <- target_scaled %||% character()
+  flow <- flow %||% character()
 
   matches_ptr <- anime(source, target, distance_tolerance, angle_tolerance)
 
@@ -151,7 +155,7 @@ anime_join <- function(source,
 
       new_col_name <- paste0(prefix, col, "_wt")
 
-      if (col %in% target_scaled) {
+      if (col %in% flow) {
         joined <- merge(
           match_tbl,
           data.frame(

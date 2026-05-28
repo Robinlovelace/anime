@@ -13,7 +13,7 @@ anime_join(
   match_strength = 0,
   columns = NULL,
   extensive = NULL,
-  target_scaled = NULL
+  flow = NULL
 )
 }
 \arguments{
@@ -33,7 +33,11 @@ anime_join(
 
 \item{extensive}{Character vector of columns to treat as extensive (summed by source weight).}
 
-\item{target_scaled}{Character vector of columns to treat as target-scaled (summed if parallel, averaged if series, using target weight).}
+\item{flow}{Character vector of columns representing network flow or volume.
+Attributes in these columns are aggregated defensively: summed when overlapping/parallel
+lines are matched, and averaged when matched linestrings are in series. This is specifically
+designed for variables like traffic volume (e.g., Average Annual Daily Traffic / AADT)
+and flow volume on river networks.}
 }
 \value{
 The target object with joined attributes.
