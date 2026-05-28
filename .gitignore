@@ -3,4 +3,6 @@ data/
 paper/**
 !paper/
 !paper/**/*.qmd
+anime.Rcheck/
+*.tar.gz
 r/src/rust/rust

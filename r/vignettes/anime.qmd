@@ -1,0 +1,71 @@
+---
+title: "An introduction to anime"
+format: gfm
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(tidyverse)
+library(sf)
+```
+
+```{r}
+central_london <- c(-0.1276, 51.5074) |>
+  st_point() |>
+  st_sfc(crs = 4326) |>
+  sf::st_buffer(5000)
+library(osmextract)
+net <- oe_get(
+  central_london,
+  query = "SELECT * FROM lines WHERE highway is NOT NULL",
+  boundary = central_london,
+  extra_tags = c("maxspeed")
+)
+net_cycle <- net |>
+  filter(str_detect(highway, "cycleway")) |>
+  transmute(
+    id_cycleway = osm_id
+  )
+net_primary <- net |>
+  filter(str_detect(highway, "primary")) |>
+  transmute(
+    id_primary = osm_id,
+    maxspeed = as.numeric(gsub(" mph", "", maxspeed))
+  )
+nrow(net_cycle)
+nrow(net_primary)
+```
+
+```{r}
+joined1 <- anime::anime_join(
+  net_primary,
+  net_cycle
+)
+mapview::mapview(joined1["maxspeed_wt"])
+saveRDS(joined1, "/tmp/joined1.rds")
+```
+
+```{r}
+pak::pak("josiahparry/anime/r@fix/veritical-lines")
+source("https://github.com/Robinlovelace/anime/raw/refs/heads/refine-anime-join-2026/r/R/join.R")
+library(anime)
+joined2 <- anime_join(
+  net_primary,
+  net_cycle
+)
+saveRDS(joined2, "/tmp/joined2.rds")
+```
+
+## Compare the two joined datasets to confirm they are identical
+
+```{r}
+joined1 <- readRDS("/tmp/joined1.rds")
+joined2 <- readRDS("/tmp/joined2.rds")
+identical(joined1, joined2)
+```
