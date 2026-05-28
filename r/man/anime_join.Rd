@@ -27,7 +27,7 @@ anime_join(
 
 \item{prefix}{A string prefix for the new columns. Default is "".}
 
-\item{match_strength}{A threshold for target_weighted to filter out weak matches (0 to 1). Default is 0.}
+\item{match_strength}{A threshold for target_weighted to filter out weak matches. Default is 0.}
 
 \item{columns}{Character vector of columns to transfer. If NULL, transfers all columns except geometries and internal IDs.}
 

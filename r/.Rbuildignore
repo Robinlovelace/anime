@@ -9,3 +9,6 @@
 ^dev$
 ^\.github$
 ^README\.Rmd$
+^README\.qmd$
+^bootstrap\.R$
+
