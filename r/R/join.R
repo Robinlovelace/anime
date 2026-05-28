@@ -8,7 +8,7 @@
 #' @param match_strength A threshold for target_weighted to filter out weak matches. Default is 0.
 #' @param columns Character vector of columns to transfer. If NULL, transfers all columns except geometries and internal IDs.
 #' @param extensive Character vector of columns to treat as extensive (summed by source weight).
-#' @param aadt Character vector of columns to treat as AADT (summed if parallel, averaged if series, using target weight).
+#' @param target_scaled Character vector of columns to treat as target-scaled (summed if parallel, averaged if series, using target weight).
 #' @return The target object with joined attributes.
 #' @export
 anime_join <- function(source,
@@ -19,7 +19,7 @@ anime_join <- function(source,
                        match_strength = 0,
                        columns = NULL,
                        extensive = NULL,
-                       aadt = NULL) {
+                       target_scaled = NULL) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package \"sf\" is required for anime_join to work. Please install it.", call. = FALSE)
   }
@@ -29,7 +29,7 @@ anime_join <- function(source,
   }
 
   extensive <- extensive %||% character()
-  aadt <- aadt %||% character()
+  target_scaled <- target_scaled %||% character()
 
   matches_ptr <- anime(source, target, distance_tolerance, angle_tolerance)
 
@@ -151,7 +151,7 @@ anime_join <- function(source,
 
       new_col_name <- paste0(prefix, col, "_wt")
 
-      if (col %in% aadt) {
+      if (col %in% target_scaled) {
         joined <- merge(
           match_tbl,
           data.frame(

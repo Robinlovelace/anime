@@ -13,7 +13,7 @@ anime_join(
   match_strength = 0,
   columns = NULL,
   extensive = NULL,
-  aadt = NULL
+  target_scaled = NULL
 )
 }
 \arguments{
@@ -33,7 +33,7 @@ anime_join(
 
 \item{extensive}{Character vector of columns to treat as extensive (summed by source weight).}
 
-\item{aadt}{Character vector of columns to treat as AADT (summed if parallel, averaged if series, using target weight).}
+\item{target_scaled}{Character vector of columns to treat as target-scaled (summed if parallel, averaged if series, using target weight).}
 }
 \value{
 The target object with joined attributes.
