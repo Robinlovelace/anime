@@ -10,7 +10,6 @@
 #' @param extensive Character vector of columns to treat as extensive (summed by source weight).
 #' @param aadt Character vector of columns to treat as AADT (summed if parallel, averaged if series, using target weight).
 #' @return The target object with joined attributes.
-#' @importFrom sf st_drop_geometry
 #' @export
 anime_join <- function(source,
                        target,
@@ -21,6 +20,10 @@ anime_join <- function(source,
                        columns = NULL,
                        extensive = NULL,
                        aadt = NULL) {
+  if (!requireNamespace("sf", quietly = TRUE)) {
+    stop("Package \"sf\" is required for anime_join to work. Please install it.", call. = FALSE)
+  }
+
   if (!inherits(source, "sf") || !inherits(target, "sf")) {
     stop("source and target must be sf objects for anime_join to work automatically.")
   }

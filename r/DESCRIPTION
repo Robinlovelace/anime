@@ -9,7 +9,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Language: en
 Roxygen: list(markdown = TRUE)
-Config/rextendr/version: 0.3.1.9001
+Config/rextendr/version: 0.5.0
 Config/build/bootstrap: TRUE
 SystemRequirements: Cargo (rustc package manager)
 Imports: 
@@ -17,7 +17,8 @@ Imports:
     arrow,
     nanoarrow,
     rlang,
-    wk,
+    wk
+Suggests: 
     sf
 Remotes: 
     geoarrow/geoarrow-r
