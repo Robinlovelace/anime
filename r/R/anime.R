@@ -142,3 +142,20 @@ interpolate_intensive <- function(x, matches) {
 
   interpolate_intensive_(as.double(x), matches)
 }
+
+#' Filter matches in an anime object by target weighted strength
+#'
+#' @param x an `anime` object as created with `anime()`.
+#' @param match_strength a threshold for filtering out weak matches.
+#' @return The modified `anime` object in-place (invisibly).
+#' @export
+filter_matches <- function(x, match_strength) {
+  if (!inherits(x, "anime")) {
+    rlang::abort("Expected an `anime` object")
+  }
+  if (!rlang::is_bare_numeric(match_strength, 1)) {
+    rlang::abort("`match_strength` must be a scalar numeric")
+  }
+  filter_matches_(x, as.double(match_strength))
+  invisible(x)
+}

@@ -18,6 +18,8 @@ interpolate_intensive_ <- function(source_var, anime) .Call(wrap__interpolate_in
 
 get_matches_ <- function(anime) .Call(wrap__get_matches_, anime)
 
+filter_matches_ <- function(anime, match_strength) invisible(.Call(wrap__filter_matches_, anime, match_strength))
+
 anime_print_helper <- function(x) .Call(wrap__anime_print_helper, x)
 
 

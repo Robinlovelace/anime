@@ -29,19 +29,15 @@ anime_join <- function(source,
   aadt <- aadt %||% character()
 
   matches_ptr <- anime(source, target, distance_tolerance, angle_tolerance)
+
+  if (match_strength > 0) {
+    filter_matches(matches_ptr, match_strength)
+  }
+
   match_tbl <- get_matches(matches_ptr)
 
   if (nrow(match_tbl) == 0) {
-    warning("No matches found with current tolerances.")
-    return(target)
-  }
-
-  if (match_strength > 0) {
-    match_tbl <- match_tbl[match_tbl$target_weighted >= match_strength, , drop = FALSE]
-  }
-
-  if (nrow(match_tbl) == 0) {
-    warning("No matches remained after filtering by match_strength.")
+    warning("No matches found with current tolerances or after filtering by match_strength.")
     return(target)
   }
 

@@ -149,6 +149,23 @@ impl Anime {
             matches: OnceCell::from(matches),
         }
     }
+
+    /// Filter matches by target weighted strength
+    pub fn filter_matches_by_strength(&mut self, match_strength: f64) {
+        if let Some(matches_map) = self.matches.get_mut() {
+            for (target_idx, candidates) in matches_map.iter_mut() {
+                let target_len = self.target_lens[*target_idx];
+                candidates.retain(|mi| {
+                    if target_len > 0.0 {
+                        let target_wt = mi.shared_len / target_len;
+                        target_wt >= match_strength
+                    } else {
+                        false
+                    }
+                });
+            }
+        }
+    }
 }
 fn find_candidate_matches(
     source_tree: &SourceTree,
