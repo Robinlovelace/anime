@@ -122,9 +122,13 @@ fn interpolate_intensive_(source_var: &[f64], anime: ExternalPtr<Anime>) -> Doub
 }
 
 #[extendr]
-fn filter_matches_(mut anime: ExternalPtr<Anime>, match_strength: f64) {
+fn filter_matches_(
+    mut anime: ExternalPtr<Anime>,
+    min_overlap_dest: Option<f64>,
+    min_overlap_source: Option<f64>,
+) {
     let anime_mut: &mut Anime = &mut *anime;
-    anime_mut.filter_matches_by_strength(match_strength);
+    anime_mut.filter_matches_by_overlap(min_overlap_dest, min_overlap_source);
 }
 
 #[derive(IntoDataFrameRow)]

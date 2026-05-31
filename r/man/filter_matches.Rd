@@ -2,18 +2,20 @@
 % Please edit documentation in R/anime.R
 \name{filter_matches}
 \alias{filter_matches}
-\title{Filter matches in an anime object by target weighted strength}
+\title{Filter matches in an anime object by destination and/or source overlap}
 \usage{
-filter_matches(x, match_strength)
+filter_matches(x, min_overlap_dest = NULL, min_overlap_source = NULL)
 }
 \arguments{
-\item{x}{an \code{anime} object as created with \code{anime()}.}
+\item{x}{An \code{anime} object as created with \code{anime()}.}
 
-\item{match_strength}{a threshold for filtering out weak matches.}
+\item{min_overlap_dest}{Optional. A scalar numeric threshold (0 to 1) for the destination segment overlap.}
+
+\item{min_overlap_source}{Optional. A scalar numeric threshold (0 to 1) for the source segment overlap.}
 }
 \value{
 The modified \code{anime} object in-place (invisibly).
 }
 \description{
-Filter matches in an anime object by target weighted strength
+Filter matches in an anime object by destination and/or source overlap
 }

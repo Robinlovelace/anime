@@ -143,19 +143,73 @@ interpolate_intensive <- function(x, matches) {
   interpolate_intensive_(as.double(x), matches)
 }
 
-#' Filter matches in an anime object by target weighted strength
+#' Filter matches in an anime object by destination and/or source overlap
 #'
-#' @param x an `anime` object as created with `anime()`.
-#' @param match_strength a threshold for filtering out weak matches.
+#' @param x An `anime` object as created with `anime()`.
+#' @param min_overlap_dest Optional. A scalar numeric threshold (0 to 1) for the destination segment overlap.
+#' @param min_overlap_source Optional. A scalar numeric threshold (0 to 1) for the source segment overlap.
 #' @return The modified `anime` object in-place (invisibly).
 #' @export
-filter_matches <- function(x, match_strength) {
+filter_matches <- function(x, min_overlap_dest = NULL, min_overlap_source = NULL) {
   if (!inherits(x, "anime")) {
     rlang::abort("Expected an `anime` object")
   }
-  if (!rlang::is_bare_numeric(match_strength, 1)) {
-    rlang::abort("`match_strength` must be a scalar numeric")
+  if (is.null(min_overlap_dest) && is.null(min_overlap_source)) {
+    return(invisible(x))
   }
-  filter_matches_(x, as.double(match_strength))
+  if (!is.null(min_overlap_dest)) {
+    if (!rlang::is_bare_numeric(min_overlap_dest, 1)) {
+      rlang::abort("`min_overlap_dest` must be a scalar numeric")
+    }
+    min_overlap_dest <- as.double(min_overlap_dest)
+  }
+  if (!is.null(min_overlap_source)) {
+    if (!rlang::is_bare_numeric(min_overlap_source, 1)) {
+      rlang::abort("`min_overlap_source` must be a scalar numeric")
+    }
+    min_overlap_source <- as.double(min_overlap_source)
+  }
+  filter_matches_(x, min_overlap_dest, min_overlap_source)
   invisible(x)
+}
+
+#' Interpolate flow variables
+#'
+#' Interpolate network flow volume variables from the source geometry to the target geometry.
+#' Flow variables (such as Annual Average Daily Traffic / AADT) are aggregated by multiplying
+#' by the target/destination overlap ratio and summing. This naturally behaves as a length-weighted
+#' average for serial matches and a sum for parallel matches.
+#'
+#' @param x A numeric variable with the same length as the source geometry.
+#' @param matches An `anime` object created with `anime()`.
+#' @return A numeric vector with the same length as the target geometry representing the interpolated flow.
+#' @export
+interpolate_flow <- function(x, matches) {
+  if (!inherits(matches, "anime")) {
+    rlang::abort("Expected an `anime` object")
+  }
+  if (!rlang::is_bare_numeric(x)) {
+    rlang::abort("`x` must be a numeric vector.")
+  }
+
+  match_tbl <- get_matches(matches)
+  if (nrow(match_tbl) == 0) {
+    .info <- anime_print_helper(matches)
+    return(numeric(.info$target_fts))
+  }
+
+  weighted_val <- x[match_tbl$source_id] * match_tbl$target_weighted
+  weighted_val[is.na(weighted_val)] <- 0
+
+  summed <- stats::aggregate(
+    weighted_val,
+    by = list(target_id = match_tbl$target_id),
+    FUN = sum,
+    na.rm = TRUE
+  )
+
+  .info <- anime_print_helper(matches)
+  res <- numeric(.info$target_fts)
+  res[summed$target_id] <- summed$x
+  res
 }

@@ -2,46 +2,39 @@
 % Please edit documentation in R/join.R
 \name{anime_join}
 \alias{anime_join}
-\title{Join attributes from a source network to a target network}
+\title{Join attributes from a source network to a destination network}
 \usage{
 anime_join(
   source,
-  target,
-  distance_tolerance = 10,
-  angle_tolerance = 5,
-  prefix = "",
-  match_strength = 0,
-  columns = NULL,
+  dest,
+  min_overlap_dest = NULL,
+  min_overlap_source = NULL,
+  intensive = NULL,
   extensive = NULL,
-  flow = NULL
+  prefix = "",
+  anime_opts = list()
 )
 }
 \arguments{
 \item{source}{An \code{sf} object or handleable geometry representing the source network.}
 
-\item{target}{An \code{sf} object or handleable geometry representing the target network.}
+\item{dest}{An \code{sf} object or handleable geometry representing the destination network.}
 
-\item{distance_tolerance}{The maximum distance between two linestrings to be considered a match.}
+\item{min_overlap_dest}{Optional. A scalar numeric threshold (0 to 1) for the destination segment overlap.}
 
-\item{angle_tolerance}{The maximum angle difference between two lines to be considered a match.}
+\item{min_overlap_source}{Optional. A scalar numeric threshold (0 to 1) for the source segment overlap.}
 
-\item{prefix}{A string prefix for the new columns. Default is "".}
-
-\item{match_strength}{A threshold for target_weighted to filter out weak matches. Default is 0.}
-
-\item{columns}{Character vector of columns to transfer. If NULL, transfers all columns except geometries and internal IDs.}
+\item{intensive}{Character vector of columns to treat as intensive (length-weighted average).}
 
 \item{extensive}{Character vector of columns to treat as extensive (summed by source weight).}
 
-\item{flow}{Character vector of columns representing network flow or volume.
-Attributes in these columns are aggregated defensively: summed when overlapping/parallel
-lines are matched, and averaged when matched linestrings are in series. This is specifically
-designed for variables like traffic volume (e.g., Average Annual Daily Traffic / AADT)
-and flow volume on river networks.}
+\item{prefix}{A string prefix for the new columns. Default is "".}
+
+\item{anime_opts}{A named list of matching options (e.g. \code{distance_tolerance} and \code{angle_tolerance}).}
 }
 \value{
-The target object with joined attributes.
+The destination object with joined attributes.
 }
 \description{
-Join attributes from a source network to a target network
+Join attributes from a source network to a destination network
 }
