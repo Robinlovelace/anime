@@ -136,6 +136,15 @@ for (idx in workspace_dep_idx) {
   pkg_deps[[idx]] <- .dep
 }
 
+# Ensure features are written as arrays/lists by tomledit
+for (i in seq_along(pkg_deps)) {
+  dep <- pkg_deps[[i]]
+  if (is.list(dep) && !is.null(dep$features)) {
+    dep$features <- as.list(dep$features)
+    pkg_deps[[i]] <- dep
+  }
+}
+
 # insert the new deps
 new_cargo_toml <- insert_items(
   new_cargo_toml,

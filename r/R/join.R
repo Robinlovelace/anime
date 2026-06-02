@@ -1,82 +1,73 @@
-#' Join attributes from a source network to a target network
+#' Join attributes from a source network to a destination network
 #'
 #' @param source An `sf` object or handleable geometry representing the source network.
-#' @param target An `sf` object or handleable geometry representing the target network.
-#' @param distance_tolerance The maximum distance between two linestrings to be considered a match.
-#' @param angle_tolerance The maximum angle difference between two lines to be considered a match.
-#' @param prefix A string prefix for the new columns. Default is "".
-#' @param match_strength A threshold for target_weighted to filter out weak matches. Default is 0.
-#' @param columns Character vector of columns to transfer. If NULL, transfers all columns except geometries and internal IDs.
+#' @param dest An `sf` object or handleable geometry representing the destination network.
+#' @param min_overlap_dest Optional. A scalar numeric threshold (0 to 1) for the destination segment overlap.
+#' @param min_overlap_source Optional. A scalar numeric threshold (0 to 1) for the source segment overlap.
+#' @param intensive Character vector of columns to treat as intensive (length-weighted average).
 #' @param extensive Character vector of columns to treat as extensive (summed by source weight).
-#' @param flow Character vector of columns representing network flow or volume. 
-#'   Attributes in these columns are aggregated defensively: summed when overlapping/parallel 
-#'   lines are matched, and averaged when matched linestrings are in series. This is specifically 
-#'   designed for variables like traffic volume (e.g., Average Annual Daily Traffic / AADT) 
-#'   and flow volume on river networks.
-#' @return The target object with joined attributes.
+#' @param prefix A string prefix for the new columns. Default is "".
+#' @param anime_opts A named list of matching options (e.g. `distance_tolerance` and `angle_tolerance`).
+#' @return The destination object with joined attributes.
 #' @export
 anime_join <- function(source,
-                       target,
-                       distance_tolerance = 10,
-                       angle_tolerance = 5,
-                       prefix = "",
-                       match_strength = 0,
-                       columns = NULL,
+                       dest,
+                       min_overlap_dest = NULL,
+                       min_overlap_source = NULL,
+                       intensive = NULL,
                        extensive = NULL,
-                       flow = NULL) {
+                       prefix = "",
+                       anime_opts = list()) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package \"sf\" is required for anime_join to work. Please install it.", call. = FALSE)
   }
 
-  if (!inherits(source, "sf") || !inherits(target, "sf")) {
-    stop("source and target must be sf objects for anime_join to work automatically.")
+  if (!inherits(source, "sf") || !inherits(dest, "sf")) {
+    stop("source and dest must be sf objects for anime_join to work automatically.")
   }
 
-  extensive <- extensive %||% character()
-  flow <- flow %||% character()
+  dist_tol <- anime_opts$distance_tolerance %||% 10
+  angle_tol <- anime_opts$angle_tolerance %||% 5
 
-  matches_ptr <- anime(source, target, distance_tolerance, angle_tolerance)
+  matches_ptr <- anime(source, dest, dist_tol, angle_tol)
 
-  if (match_strength > 0) {
-    filter_matches(matches_ptr, match_strength)
+  if (!is.null(min_overlap_dest) || !is.null(min_overlap_source)) {
+    filter_matches(matches_ptr, min_overlap_dest, min_overlap_source)
   }
 
   match_tbl <- get_matches(matches_ptr)
 
   if (nrow(match_tbl) == 0) {
-    warning("No matches found with current tolerances or after filtering by match_strength.")
-    return(target)
+    warning("No matches found with current tolerances or after filtering by min_overlap.")
+    return(dest)
   }
 
   source_df <- sf::st_drop_geometry(source)
-
-  if (is.null(columns)) {
-    columns <- setdiff(
-      names(source_df),
-      c("source_id", "target_id", "row_number", "geometry", "geom")
-    )
-  } else {
-    columns <- intersect(columns, names(source_df))
-  }
-
-  if (length(columns) == 0) {
-    return(target)
-  }
-
-  is_cat <- vapply(
-    source_df[columns],
-    function(x) !is.numeric(x) || is.character(x),
-    logical(1)
+  cols_to_check <- setdiff(
+    names(source_df),
+    c("source_id", "target_id", "row_number", "geometry", "geom")
   )
 
-  cat_cols <- columns[is_cat]
-  num_cols <- setdiff(columns, cat_cols)
+  is_num <- vapply(source_df[cols_to_check], is.numeric, logical(1))
+  num_cols <- cols_to_check[is_num]
+
+  if (length(num_cols) > 0 && is.null(intensive) && is.null(extensive)) {
+    stop("For statistical safety, you must explicitly specify which numeric columns are 'intensive' or 'extensive'.")
+  }
+
+  intensive <- intensive %||% character()
+  extensive <- extensive %||% character()
+
+  intensive <- intersect(intensive, num_cols)
+  extensive <- intersect(extensive, num_cols)
+
+  cat_cols <- cols_to_check[!is_num]
 
   source_df_internal <- source_df
   source_df_internal$row_idx_internal <- seq_len(nrow(source_df_internal))
 
-  target_enriched <- target
-  target_enriched$row_idx_internal <- seq_len(nrow(target_enriched))
+  dest_enriched <- dest
+  dest_enriched$row_idx_internal <- seq_len(nrow(dest_enriched))
 
   if (length(cat_cols) > 0) {
     for (col in cat_cols) {
@@ -130,66 +121,44 @@ anime_join <- function(source,
       consensus <- totals[first_idx, c("target_id", "value"), drop = FALSE]
 
       new_col_name <- paste0(prefix, col)
-      target_enriched[[new_col_name]] <- NA
+      dest_enriched[[new_col_name]] <- NA
 
-      match_idx <- match(target_enriched$row_idx_internal, consensus$target_id)
+      match_idx <- match(dest_enriched$row_idx_internal, consensus$target_id)
       hit <- !is.na(match_idx)
 
       original_col <- source_df[[col]]
       if (is.factor(original_col)) {
-        target_enriched[[new_col_name]] <- factor(target_enriched[[new_col_name]], levels = levels(original_col))
-        target_enriched[[new_col_name]][hit] <- consensus$value[match_idx[hit]]
+        dest_enriched[[new_col_name]] <- factor(dest_enriched[[new_col_name]], levels = levels(original_col))
+        dest_enriched[[new_col_name]][hit] <- consensus$value[match_idx[hit]]
       } else if (is.logical(original_col)) {
         vals <- consensus$value[match_idx[hit]]
-        target_enriched[[new_col_name]][hit] <- vals %in% "TRUE"
+        dest_enriched[[new_col_name]][hit] <- vals %in% "TRUE"
       } else {
-        target_enriched[[new_col_name]][hit] <- consensus$value[match_idx[hit]]
+        dest_enriched[[new_col_name]][hit] <- consensus$value[match_idx[hit]]
       }
     }
   }
 
-  if (length(num_cols) > 0) {
-    for (col in num_cols) {
+  if (length(intensive) > 0) {
+    for (col in intensive) {
       val <- as.numeric(source_df[[col]])
       val[is.na(val)] <- 0
-
       new_col_name <- paste0(prefix, col, "_wt")
-
-      if (col %in% flow) {
-        joined <- merge(
-          match_tbl,
-          data.frame(
-            row_idx_internal = source_df_internal$row_idx_internal,
-            value = val
-          ),
-          by.x = "source_id",
-          by.y = "row_idx_internal",
-          all.x = TRUE,
-          sort = FALSE
-        )
-
-        joined$weighted_value <- joined$value * joined$target_weighted
-
-        interp <- stats::aggregate(
-          joined$weighted_value,
-          by = list(target_id = joined$target_id),
-          FUN = function(x) sum(x, na.rm = TRUE)
-        )
-
-        target_enriched[[new_col_name]] <- 0
-        match_idx <- match(target_enriched$row_idx_internal, interp$target_id)
-        hit <- !is.na(match_idx)
-        target_enriched[[new_col_name]][hit] <- interp$x[match_idx[hit]]
-      } else if (col %in% extensive) {
-        target_enriched[[new_col_name]] <- interpolate_extensive(val, matches_ptr)
-      } else {
-        target_enriched[[new_col_name]] <- interpolate_intensive(val, matches_ptr)
-      }
+      dest_enriched[[new_col_name]] <- interpolate_intensive(val, matches_ptr)
     }
   }
 
-  target_enriched$row_idx_internal <- NULL
-  target_enriched
+  if (length(extensive) > 0) {
+    for (col in extensive) {
+      val <- as.numeric(source_df[[col]])
+      val[is.na(val)] <- 0
+      new_col_name <- paste0(prefix, col, "_wt")
+      dest_enriched[[new_col_name]] <- interpolate_extensive(val, matches_ptr)
+    }
+  }
+
+  dest_enriched$row_idx_internal <- NULL
+  dest_enriched
 }
 
 `%||%` <- function(x, y) {
