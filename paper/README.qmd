@@ -70,9 +70,12 @@ for (ds in datasets) {
 ```
 
 ```{r}
+#| label: install-dependencies
 #| eval: false
 if (!"quarto" %in% rownames(installed.packages())) {
   install.packages("quarto")
+  pak::pak("josiahparry/anime/r")
+  pak::pak("josiahparry/rsgeo")
 }
 quarto::quarto_render("paper/README.qmd")
 ```
@@ -594,6 +597,7 @@ While the core ANIME algorithm does not directly handle categorical variables, c
 @eq-extensive and @eq-intensive can then be used to integrate these dummy variables. Applying the extensive integration method (@eq-extensive) to $Y_{ik}$ yields the total length-weighted count of category $k$ transferred to the target feature. Applying the intensive integration method (@eq-intensive) yields the proportion of the matched length of the target feature that corresponds to category $k$. This approach is demonstrated in the R implementation.
 
 <!-- Parallel Line Attribute Integration (flow) -->
+<!-- Suggestion on this (from Robin): Show the outputs of intensive and extensive attribute transfer for flow data in the case study/Appendix and then mention how the needs of flow estimation differ (due to the need to keep the total flow, length of network / flow per unit length equivalent between source and target networks). We could frame this as a future research problem that requires additional constraints and is not the focus of this paper, but we can mention it as a future direction. -->
 
 # Core Implementation Architecture
 
