@@ -31,7 +31,7 @@ $(STATLIB):
 	fi
 
 	export CARGO_HOME=$(CARGOTMP) && \
-	export PATH="$(PATH):$(HOME)/.cargo/bin" && \
+	export PATH="$(HOME)/.cargo/bin:$(PATH)" && \
 	RUSTFLAGS="$(RUSTFLAGS) --print=native-static-libs" cargo build  --lib --release --manifest-path=./rust/Cargo.toml --target-dir $(TARGET_DIR)
 
 	# Always clean up CARGOTMP

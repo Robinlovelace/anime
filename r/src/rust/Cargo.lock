@@ -61,6 +61,7 @@ dependencies = [
  "extendr-api",
  "geo",
  "geo-traits",
+ "geo-types",
  "geoarrow",
  "geoarrow-array",
  "itertools 0.12.1",

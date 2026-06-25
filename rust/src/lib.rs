@@ -149,6 +149,33 @@ impl Anime {
             matches: OnceCell::from(matches),
         }
     }
+
+    /// Filter matches by destination and/or source overlap
+    pub fn filter_matches_by_overlap(
+        &mut self,
+        min_overlap_dest: Option<f64>,
+        min_overlap_source: Option<f64>,
+    ) {
+        if let Some(matches_map) = self.matches.get_mut() {
+            for (target_idx, candidates) in matches_map.iter_mut() {
+                let target_len = self.target_lens[*target_idx];
+                candidates.retain(|mi| {
+                    if let Some(min_dest) = min_overlap_dest {
+                        if target_len <= 0.0 || (mi.shared_len / target_len) < min_dest {
+                            return false;
+                        }
+                    }
+                    if let Some(min_source) = min_overlap_source {
+                        let source_len = self.source_lens[mi.source_index];
+                        if source_len <= 0.0 || (mi.shared_len / source_len) < min_source {
+                            return false;
+                        }
+                    }
+                    true
+                });
+            }
+        }
+    }
 }
 fn find_candidate_matches(
     source_tree: &SourceTree,
