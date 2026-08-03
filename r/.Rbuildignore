@@ -9,3 +9,4 @@
 ^dev$
 ^\.github$
 ^README\.Rmd$
+^src/rust/target$
